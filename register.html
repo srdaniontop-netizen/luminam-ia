@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Luminom IA — Acceder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+
+    :root{--navy:#0A1628;--navy-mid:#112240;--navy-light:#1C3461;--gold:#C9A84C;--gold-light:#E8C97A;--white:#FFFFFF;--off-white:#F8F6F1;--text-primary:#0A1628;--text-secondary:#4A5568;--text-muted:#8898A4;--border:rgba(10,22,40,0.1);--border-gold:rgba(201,168,76,0.3);--shadow-sm:0 2px 12px rgba(10,22,40,0.08);--shadow-md:0 8px 32px rgba(10,22,40,0.14);--radius-sm:8px;--radius-md:14px;--radius-lg:22px;--radius-xl:32px;--font-display:'Playfair Display',Georgia,serif;--font-body:'Inter',system-ui,sans-serif;--t:0.28s cubic-bezier(0.4,0,0.2,1);}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:var(--font-body);line-height:1.6;overflow-x:hidden;}
+    a{text-decoration:none;color:inherit;}
+    input,textarea,select,button{font-family:inherit;}
+    .hidden{display:none!important;}
+    .logo{display:flex;align-items:center;gap:0.6rem;color:var(--white);}
+    .logo-mark{width:36px;height:36px;background:var(--gold);color:var(--navy);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:1.1rem;flex-shrink:0;}
+    .logo-text{font-family:var(--font-display);font-size:1.15rem;font-weight:600;}
+    .logo-text em{font-style:italic;color:var(--gold);}
+    .btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;background:var(--gold);color:var(--navy);padding:0.85rem 2rem;border-radius:100px;font-weight:600;font-size:0.95rem;border:none;cursor:pointer;transition:var(--t);}
+    .btn-primary:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,0.35);}
+    .btn-primary:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+    .form-field{margin-bottom:1.1rem;}
+    .form-field label{display:block;font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:0.35rem;}
+    .form-field input,.form-field select{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:0.75rem 1rem;font-size:0.9rem;color:var(--navy);background:var(--white);outline:none;transition:var(--t);appearance:none;}
+    .form-field input:focus,.form-field select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.12);}
+    .form-field input.err,.form-field select.err{border-color:#e53e3e;}
+    .ferr{display:block;font-size:0.73rem;color:#e53e3e;margin-top:0.25rem;min-height:0.9rem;}
+
+    body{background:var(--navy);min-height:100vh;display:flex;flex-direction:column;}
+    /* TOP BAR */
+    .topbar{padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+    .back-link{color:rgba(255,255,255,0.5);font-size:0.83rem;display:flex;align-items:center;gap:0.4rem;transition:var(--t);}
+    .back-link:hover{color:var(--gold);}
+    /* BG */
+    .bg-orb{position:fixed;border-radius:50%;filter:blur(100px);pointer-events:none;}
+    .bg-orb1{width:500px;height:500px;background:rgba(201,168,76,0.07);top:-150px;right:-150px;}
+    .bg-orb2{width:400px;height:400px;background:rgba(28,52,97,0.5);bottom:-100px;left:-100px;}
+    .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(201,168,76,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.03) 1px,transparent 1px);background-size:55px 55px;pointer-events:none;}
+    /* CARD */
+    .auth-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;z-index:2;}
+    .auth-card{background:var(--white);border-radius:var(--radius-xl);padding:2.75rem;width:100%;max-width:460px;box-shadow:0 25px 70px rgba(0,0,0,0.35);}
+    .auth-logo{text-align:center;margin-bottom:1.75rem;}
+    .auth-logo .logo-mark{width:52px;height:52px;font-size:1.4rem;margin:0 auto 0.5rem;}
+    .auth-logo .logo-text{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--navy);display:block;}
+    .auth-logo .logo-text em{font-style:italic;color:var(--gold);}
+    /* TABS */
+    .tabs{display:flex;background:#f1f4f9;border-radius:100px;padding:4px;margin-bottom:2rem;}
+    .tab-btn{flex:1;padding:0.65rem;border:none;background:transparent;border-radius:100px;font-size:0.88rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:var(--t);}
+    .tab-btn.active{background:var(--white);color:var(--navy);box-shadow:0 2px 8px rgba(10,22,40,0.12);}
+    /* DIVIDER */
+    .divider{display:flex;align-items:center;gap:1rem;margin:1.25rem 0;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+    .divider span{font-size:0.75rem;color:var(--text-muted);white-space:nowrap;}
+    /* ALERT */
+    .alert{padding:0.75rem 1rem;border-radius:var(--radius-sm);font-size:0.83rem;margin-bottom:1rem;}
+    .alert-err{background:#fff5f5;border:1px solid #fed7d7;color:#c53030;}
+    .alert-ok{background:#f0fff4;border:1px solid #c6f6d5;color:#276749;}
+    /* FOOTER */
+    .auth-footer{text-align:center;font-size:0.75rem;color:rgba(255,255,255,0.3);padding:1.5rem;position:relative;z-index:2;}
+    /* PASS TOGGLE */
+    .pass-wrap{position:relative;}
+    .pass-toggle{position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1rem;padding:0;line-height:1;}
+    .form-field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234A5568' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.5rem;}
+    .btn-full{width:100%;justify-content:center;padding:0.95rem;font-size:1rem;margin-top:0.25rem;}
+    .bottom-link{text-align:center;margin-top:1.25rem;font-size:0.83rem;color:var(--text-muted);}
+    .bottom-link a{color:var(--gold);font-weight:600;}
+    .bottom-link a:hover{text-decoration:underline;}
+    @media(max-width:500px){.auth-card{padding:2rem 1.5rem;border-radius:var(--radius-lg);}}
+  </style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+<div class="bg-grid"></div>
+
+<div class="topbar">
+  <a href="index.html" class="logo">
+    <span class="logo-mark">L</span>
+    <span class="logo-text">Luminom <em>IA</em></span>
+  </a>
+  <a href="index.html" class="back-link">← Volver al inicio</a>
+</div>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-mark">L</div>
+      <span class="logo-text">Luminom <em>IA</em></span>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn" id="tabLogin" onclick="switchTab('login')">Iniciar sesión</button>
+      <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Registrarse</button>
+    </div>
+
+    <!-- ALERTA GLOBAL -->
+    <div class="alert hidden" id="globalAlert"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="form-field">
+        <label for="lEmail">Correo</label>
+        <input type="email" id="lEmail" placeholder="tu@universidad.edu.co"/>
+        <span class="ferr" id="lEmailErr"></span>
+      </div>
+      <div class="form-field">
+        <label for="lPass">Contraseña</label>
+        <div class="pass-wrap">
+          <input type="password" id="lPass" placeholder="••••••••"/>
+          <button class="pass-toggle" onclick="togglePass('lPass',this)" title="Ver contraseña">👁</button>
+        </div>
+        <span class="ferr" id="lPassErr"></span>
+      </div>
+      <button class="btn-primary btn-full" id="loginBtn" onclick="doLogin()">Entrar al tutor →</button>
+      <p class="bottom-link">¿No tienes cuenta? <a href="#" onclick="switchTab('register');return false;">Regístrate gratis</a></p>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" class="hidden">
+      <div class="form-field">
+        <label for="rName">Nombre completo</label>
+        <input type="text" id="rName" placeholder="Ej: María García"/>
+        <span class="ferr" id="rNameErr"></span>
+      </div>
+      <div class="form-field">
+        <label for="rEmail">Correo</label>
+        <input type="email" id="rEmail" placeholder="tu@universidad.edu.co"/>
+        <span class="ferr" id="rEmailErr"></span>
+      </div>
+      <div class="form-field">
+        <label for="rCarrera">Carrera universitaria</label>
+        <select id="rCarrera">
+          <option value="">Selecciona tu carrera</option>
+          <option>Ingeniería de Sistemas</option>
+          <option>Ingeniería Civil</option>
+          <option>Ingeniería Industrial</option>
+          <option>Medicina</option>
+          <option>Enfermería</option>
+          <option>Derecho</option>
+          <option>Economía</option>
+          <option>Administración de Empresas</option>
+          <option>Matemáticas</option>
+          <option>Física</option>
+          <option>Química</option>
+          <option>Psicología</option>
+          <option>Comunicación Social</option>
+          <option>Arquitectura</option>
+          <option>Otra</option>
+        </select>
+        <span class="ferr" id="rCarreraErr"></span>
+      </div>
+      <div class="form-field">
+        <label for="rPass">Contraseña</label>
+        <div class="pass-wrap">
+          <input type="password" id="rPass" placeholder="Mínimo 6 caracteres"/>
+          <button class="pass-toggle" onclick="togglePass('rPass',this)" title="Ver contraseña">👁</button>
+        </div>
+        <span class="ferr" id="rPassErr"></span>
+      </div>
+      <div class="form-field">
+        <label for="rPass2">Confirmar contraseña</label>
+        <div class="pass-wrap">
+          <input type="password" id="rPass2" placeholder="Repite tu contraseña"/>
+          <button class="pass-toggle" onclick="togglePass('rPass2',this)" title="Ver contraseña">👁</button>
+        </div>
+        <span class="ferr" id="rPass2Err"></span>
+      </div>
+      <button class="btn-primary btn-full" id="registerBtn" onclick="doRegister()">Crear cuenta gratis →</button>
+      <p class="bottom-link">¿Ya tienes cuenta? <a href="#" onclick="switchTab('login');return false;">Iniciar sesión</a></p>
+    </div>
+
+  </div>
+</div>
+
+<p class="auth-footer">© 2024 Luminom IA · Jóvenes creaTIvos</p>
+
+<script>
+
+const Auth={
+  register(n,e,p,c){const u=this.getUsers();if(u.find(x=>x.email===e))return{ok:false,error:'Este correo ya está registrado.'};const nu={id:Date.now().toString(),name:n,email:e,password:p,carrera:c,createdAt:new Date().toISOString()};u.push(nu);localStorage.setItem('luminom_users',JSON.stringify(u));return{ok:true,user:nu};},
+  login(e,p){const u=this.getUsers();const user=u.find(x=>x.email===e&&x.password===p);if(!user)return{ok:false,error:'Correo o contraseña incorrectos.'};const s={userId:user.id,name:user.name,email:user.email,carrera:user.carrera};localStorage.setItem('luminom_session',JSON.stringify(s));return{ok:true,user:s};},
+  logout(){localStorage.removeItem('luminom_session');window.location.href='index.html';},
+  getSession(){try{return JSON.parse(localStorage.getItem('luminom_session'));}catch{return null;}},
+  getUsers(){try{return JSON.parse(localStorage.getItem('luminom_users')||'[]');}catch{return[];}},
+  requireAuth(){if(!this.getSession()){window.location.href='register.html?next=tutor';return false;}return true;},
+  redirectIfLogged(){if(this.getSession())window.location.href='tutor.html';}
+};
+
+
+// Redirigir si ya tiene sesión
+Auth.redirectIfLogged();
+
+// Leer ?tab= o ?next= de la URL
+const params = new URLSearchParams(location.search);
+if(params.get('tab') === 'register') switchTab('register');
+else switchTab('login');
+
+function switchTab(tab){
+  const isLogin = tab === 'login';
+  document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
+  document.getElementById('registerForm').classList.toggle('hidden', isLogin);
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+  hideAlert();
+}
+
+function showAlert(msg, type='err'){
+  const el = document.getElementById('globalAlert');
+  el.className = `alert alert-${type}`;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function hideAlert(){ document.getElementById('globalAlert').classList.add('hidden'); }
+
+function togglePass(id, btn){
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+function valField(id, errId, msg){
+  const el = document.getElementById(id);
+  const ok = el.value.trim() !== '';
+  el.classList.toggle('err', !ok);
+  document.getElementById(errId).textContent = ok ? '' : msg;
+  return ok;
+}
+function valEmail(id, errId){
+  const el = document.getElementById(id);
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim());
+  const empty = !el.value.trim();
+  el.classList.toggle('err', !ok);
+  document.getElementById(errId).textContent = empty ? 'El correo es requerido' : !ok ? 'Correo inválido' : '';
+  return ok;
+}
+
+function doLogin(){
+  const v1 = valEmail('lEmail','lEmailErr');
+  const v2 = valField('lPass','lPassErr','La contraseña es requerida');
+  if(!v1||!v2) return;
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  setTimeout(()=>{
+    const res = Auth.login(
+      document.getElementById('lEmail').value.trim(),
+      document.getElementById('lPass').value
+    );
+    if(res.ok){
+      showAlert('¡Bienvenido de nuevo, '+res.user.name+'! Redirigiendo...','ok');
+      setTimeout(()=>{ window.location.href = params.get('next')==='tutor' ? 'tutor.html' : 'tutor.html'; }, 900);
+    } else {
+      showAlert(res.error);
+      btn.disabled=false; btn.textContent='Entrar al tutor →';
+    }
+  }, 700);
+}
+
+function doRegister(){
+  const v1 = valField('rName','rNameErr','El nombre es requerido');
+  const v2 = valEmail('rEmail','rEmailErr');
+  const v3 = valField('rCarrera','rCarreraErr','Selecciona tu carrera');
+  const p1 = document.getElementById('rPass').value;
+  const p2 = document.getElementById('rPass2').value;
+  let v4=true, v5=true;
+  if(p1.length < 6){ document.getElementById('rPass').classList.add('err'); document.getElementById('rPassErr').textContent='Mínimo 6 caracteres'; v4=false; } else { document.getElementById('rPass').classList.remove('err'); document.getElementById('rPassErr').textContent=''; }
+  if(p1!==p2){ document.getElementById('rPass2').classList.add('err'); document.getElementById('rPass2Err').textContent='Las contraseñas no coinciden'; v5=false; } else { document.getElementById('rPass2').classList.remove('err'); document.getElementById('rPass2Err').textContent=''; }
+  if(!v1||!v2||!v3||!v4||!v5) return;
+  const btn = document.getElementById('registerBtn');
+  btn.disabled=true; btn.textContent='Creando cuenta...';
+  setTimeout(()=>{
+    const res = Auth.register(
+      document.getElementById('rName').value.trim(),
+      document.getElementById('rEmail').value.trim(),
+      p1,
+      document.getElementById('rCarrera').value
+    );
+    if(res.ok){
+      Auth.login(document.getElementById('rEmail').value.trim(), p1);
+      showAlert('¡Cuenta creada! Bienvenido, '+res.user.name+'. Redirigiendo...','ok');
+      setTimeout(()=>{ window.location.href='tutor.html'; }, 900);
+    } else {
+      showAlert(res.error);
+      btn.disabled=false; btn.textContent='Crear cuenta gratis →';
+    }
+  }, 700);
+}
+
+// Enter key
+document.getElementById('lPass').addEventListener('keydown', e => e.key==='Enter' && doLogin());
+document.getElementById('rPass2').addEventListener('keydown', e => e.key==='Enter' && doRegister());
+</script>
+</body>
+</html>
