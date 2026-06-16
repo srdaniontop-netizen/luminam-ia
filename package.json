@@ -1,0 +1,8 @@
+{
+  "name": "luminom-ia-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.22.0"
+  }
+}
