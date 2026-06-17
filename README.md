@@ -1,67 +1,156 @@
-# 🎓 Luminom IA - Tutor Universitario con IA
+# 🎓 Luminom IA - Tutor Universitario Inteligente
 
-**Tutor universitario inteligente 100% gratuito para estudiantes colombianos**
+**Tutor universitario con IA diseñado específicamente para estudiantes colombianos**
 
 🔗 **Demo en vivo**: https://srdaniontop-netizen.github.io/luminam-ia/
 
 ---
 
-## ✨ Características
+## ✨ Características Principales
 
-- 🆓 **100% Gratis** - Sin pagos ni suscripciones
-- 🚫 **Sin Registro Obligatorio** - Empieza inmediatamente
-- 🤖 **IA Avanzada** - Llama 3.3 70B de Meta (vía Groq API)
-- 🇨🇴 **Para Colombia** - Explicaciones adaptadas al contexto local
-- 📚 **Todas las Materias** - Matemáticas, Física, Programación, Derecho, y más
-- ⚡ **Súper Rápido** - Respuestas en segundos gracias a Groq
-- 🔒 **Privado** - Tus conversaciones solo se guardan en tu navegador
+- 🎯 **Adaptado a ti**: Respuestas personalizadas según tu carrera
+- ⚡ **Disponible 24/7**: A cualquier hora, sin esperas
+- 📚 **50+ Materias**: Desde cálculo hasta derecho constitucional
+- 🔒 **Sistema de autenticación**: Registro obligatorio para acceder al tutor
+- 💬 **Conversación natural**: Pregunta como hablarías con un compañero
+- 🇨🇴 **Contexto colombiano**: Ejemplos locales y explicaciones claras
+- 🎨 **Diseño elegante**: Tipografía Playfair Display + Inter
 
 ---
 
-## 🚀 Uso Rápido
+## 🚀 Estructura del Proyecto
 
-### Paso 1: Obtén tu API Key (Gratis)
+```
+luminam-ia/
+├── index.html              → Página principal (landing)
+├── login.html              → Login y registro
+├── tutor.html              → Chat con IA (requiere login)
+├── admin.html              → Panel de administración
+├── servicios.html          → Planes y precios
+├── COMO_ACCEDER_ADMIN.md  → Guía del panel admin
+└── README.md              → Este archivo
+```
+
+---
+
+## 🚀 Cómo Usar
+
+### Paso 1: Regístrate
+
+1. Ve a **https://srdaniontop-netizen.github.io/luminam-ia/**
+2. Haz clic en **"Comenzar gratis"** o **"Registrarse"**
+3. Completa el formulario con:
+   - Nombre completo
+   - Email
+   - Carrera universitaria
+   - Contraseña
+4. Haz clic en **"Crear cuenta"**
+
+### Paso 2: Configura tu API Key (Gratis)
 
 1. Ve a [https://console.groq.com](https://console.groq.com)
-2. Crea una cuenta gratuita
+2. Crea una cuenta gratuita (sin tarjeta)
 3. Ve a **API Keys** → **Create API Key**
 4. Copia tu key (empieza con `gsk_...`)
+5. Pégala cuando el tutor te la pida
 
-### Paso 2: Usa el Tutor
+### Paso 3: ¡Empieza a Aprender!
 
-1. Visita: https://srdaniontop-netizen.github.io/luminam-ia/
-2. Haz clic en **"Empezar Gratis"**
-3. Pega tu API Key cuando te lo pida
-4. ¡Empieza a estudiar! 🎉
-
-**Tu API Key se guarda solo en tu navegador** (localStorage), nadie más puede verla.
+- Haz preguntas en lenguaje natural
+- Selecciona temas rápidos (Cálculo, Programación, etc.)
+- Recibe explicaciones paso a paso
 
 ---
 
-## 🔑 ¿Por qué necesito una API Key?
+## 🔐 Sistema de Autenticación
 
-Groq ofrece acceso **gratuito** a modelos de IA muy potentes, pero requiere una key para:
-- Evitar abuso del servicio
-- Darte tu propio límite de uso (muy generoso)
-- Mantener el servicio rápido y estable
+**IMPORTANTE**: Desde esta versión, el tutor requiere registro obligatorio.
 
-**Plan Gratuito de Groq:**
-- ✅ 14,400 requests por día
-- ✅ 30 requests por minuto
-- ✅ Modelo Llama 3.3 70B (uno de los mejores)
-- ✅ Sin tarjeta de crédito requerida
+### ¿Por qué registro obligatorio?
+
+- ✅ **Historial personalizado**: Guardamos el contexto de tus conversaciones
+- ✅ **Experiencia adaptada**: Las respuestas se ajustan a tu carrera
+- ✅ **Seguimiento de progreso**: Pronto podrás ver tu evolución
+- ✅ **Funciones premium**: Preparación para características futuras
+
+### Datos almacenados:
+
+```javascript
+{
+  nombre: "Juan Pérez",
+  email: "juan@email.com",
+  carrera: "Ingeniería de Sistemas",
+  fechaRegistro: "2026-06-17",
+  apiKey: "solo en tu navegador"
+}
+```
+
+**Seguridad**:
+- 🔒 Contraseñas en texto plano (demo - en producción usar bcrypt)
+- 💾 Datos en localStorage (no hay servidor)
+- 🔑 API Key solo en tu navegador
 
 ---
 
-## 🎯 Páginas Incluidas
+## 🔧 Panel de Administración
 
-| Página | Descripción |
-|--------|-------------|
-| **index.html** | Página principal con info del proyecto |
-| **tutor.html** | Chat interactivo con la IA |
-| **login.html** | Sistema de login (demo, localStorage) |
-| **servicios.html** | Planes y precios (próximamente) |
-| **admin.html** | Panel de administración (demo) |
+### Cómo Acceder
+
+Simplemente ve a: **https://srdaniontop-netizen.github.io/luminam-ia/admin.html**
+
+### Funcionalidades
+
+- 📊 **Estadísticas**: Usuarios, conversaciones, actividad
+- 👥 **Lista de usuarios**: Información de todos los registrados
+- 📈 **Gráficos**: Carreras más populares, actividad diaria
+- 📝 **Logs**: Historial de acciones (próximamente)
+
+### Nota Importante
+
+El panel admin actual muestra datos **demo/simulados** porque:
+- No hay backend real
+- Datos en localStorage del navegador
+- Sin autenticación admin (cualquiera puede acceder)
+
+**Para producción**, implementa:
+- Backend con base de datos
+- Autenticación de rol admin
+- API REST para gestión de datos
+
+[Ver guía completa →](./COMO_ACCEDER_ADMIN.md)
+
+---
+
+## 🎯 Páginas del Sitio
+
+| Página | URL | Descripción | Requiere Login |
+|--------|-----|-------------|----------------|
+| **Inicio** | `/index.html` | Landing page con información | ❌ No |
+| **Login/Registro** | `/login.html` | Autenticación de usuarios | ❌ No |
+| **Tutor IA** | `/tutor.html` | Chat inteligente con IA | ✅ Sí |
+| **Servicios** | `/servicios.html` | Planes y precios | ❌ No |
+| **Admin** | `/admin.html` | Panel de administración | ❌ No (demo) |
+
+---
+
+## 🎨 Diseño y Tipografía
+
+### Paleta de Colores
+
+```css
+--navy: #0A1628      /* Azul oscuro principal */
+--gold: #C9A84C       /* Dorado elegante */
+--off-white: #F8F6F1  /* Fondo suave */
+```
+
+### Tipografía
+
+- **Display**: Playfair Display (serif elegante)
+- **Body**: Inter (sans-serif moderna)
+
+### Inspiración
+
+Diseño profesional y académico, inspirado en universidades prestigiosas.
 
 ---
 
