@@ -56,6 +56,8 @@
     .price-card:hover{transform:translateY(-8px);border-color:var(--border-gold);box-shadow:var(--shadow-lg);}
     .price-card.featured{border-color:var(--gold);box-shadow:var(--shadow-md);}
     .price-card.featured::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+    .price-card.highlight{border-color:#059669;box-shadow:var(--shadow-md);}
+    .price-card.highlight::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#059669,#10B981);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
     
     .badge{position:absolute;top:-12px;right:20px;background:var(--gold);color:var(--navy);padding:0.4rem 1rem;border-radius:100px;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;}
     
@@ -187,7 +189,32 @@
           <li>Soporte prioritario 24/7</li>
           <li>Acceso anticipado a nuevas funciones</li>
         </ul>
-        <button class="btn btn-primary" onclick="subscribeToPremium()">Suscribirme Ahora</button>
+        <button class="btn btn-primary" onclick="subscribeToPremium('monthly')">Suscribirme Ahora</button>
+      </div>
+
+      <!-- Plan De por Vida -->
+      <div class="price-card highlight">
+        <div class="badge" style="background:#059669;">MEJOR VALOR</div>
+        <div class="plan-name">De por Vida</div>
+        <div class="plan-desc">Pago único, acceso ilimitado</div>
+        <div class="price-wrapper">
+          <div class="price"><span class="price-small">$</span>299.000</div>
+          <div class="price-period">COP / pago único</div>
+          <div style="font-size:0.8rem;color:#059669;margin-top:0.5rem;">
+            💰 Ahorras $179.000 vs. 1 año Premium
+          </div>
+        </div>
+        <ul class="features">
+          <li>Todo lo del plan Premium</li>
+          <li><strong>Acceso de por vida</strong></li>
+          <li>Sin pagos mensuales nunca más</li>
+          <li>Todas las actualizaciones futuras</li>
+          <li>Precio bloqueado para siempre</li>
+          <li>Transferible a otro dispositivo</li>
+          <li>Garantía de satisfacción 30 días</li>
+          <li>Insignia de miembro fundador 🏆</li>
+        </ul>
+        <button class="btn btn-primary" onclick="subscribeToPremium('lifetime')" style="background:#059669;border-color:#059669;">Comprar De por Vida</button>
       </div>
 
       <!-- Plan Institucional -->
@@ -312,7 +339,7 @@
 
   <script>
     // Sistema de pagos con Wompi (Pasarela colombiana)
-    function subscribeToPremium() {
+    function subscribeToPremium(planType = 'monthly') {
       // Verificar si está logueado
       const session = JSON.parse(localStorage.getItem('luminom_session') || 'null');
       
@@ -322,12 +349,28 @@
         return;
       }
       
+      // Configuración según el plan
+      const planConfig = {
+        monthly: {
+          amount: 1490000, // $14,900 COP
+          name: 'Premium Mensual',
+          description: 'Suscripción mensual Premium'
+        },
+        lifetime: {
+          amount: 29900000, // $299,000 COP
+          name: 'De por Vida',
+          description: 'Acceso Premium de por vida'
+        }
+      };
+      
+      const selectedPlan = planConfig[planType];
+      
       // Configuración de Wompi
       const wompiConfig = {
         publicKey: 'pub_test_V5V6qvtEEibQdDt5C1xYs0lQvmKYN2HH', // Key de prueba
         currency: 'COP',
-        amountInCents: 1490000, // $14,900 COP
-        reference: `premium-${session.userId}-${Date.now()}`,
+        amountInCents: selectedPlan.amount,
+        reference: `${planType}-${session.userId}-${Date.now()}`,
         redirectUrl: window.location.origin + '/luminam-ia/payment-success.html'
       };
       
@@ -352,16 +395,21 @@
         if (transaction.status === 'APPROVED') {
           // Guardar suscripción en localStorage
           const subscription = {
-            plan: 'premium',
+            plan: planType === 'lifetime' ? 'lifetime' : 'premium',
             userId: session.userId,
             transactionId: transaction.id,
             startDate: new Date().toISOString(),
+            expiryDate: planType === 'lifetime' ? 'never' : null,
             status: 'active'
           };
           
           localStorage.setItem('luminom_subscription', JSON.stringify(subscription));
           
-          alert('🎉 ¡Pago exitoso! Ahora eres Premium');
+          const message = planType === 'lifetime' 
+            ? '🎉 ¡Felicidades! Ahora tienes acceso Premium DE POR VIDA 🏆'
+            : '🎉 ¡Pago exitoso! Ahora eres Premium';
+          
+          alert(message);
           window.location.href = 'tutor.html';
         } else {
           alert('❌ Pago cancelado o rechazado');
@@ -372,17 +420,29 @@
     // Hacer función global para onclick
     window.subscribeToPremium = subscribeToPremium;
     
-    // Verificar si el usuario ya es Premium
+    // Verificar si el usuario ya es Premium o Lifetime
     function checkPremiumStatus() {
       const subscription = JSON.parse(localStorage.getItem('luminom_subscription') || 'null');
       
       if (subscription && subscription.status === 'active') {
-        // Cambiar botón para usuarios Premium
+        // Cambiar botones según el plan
         document.querySelectorAll('.btn-primary').forEach(btn => {
-          if (btn.textContent.includes('Suscribirme')) {
-            btn.textContent = '✅ Ya eres Premium';
-            btn.disabled = true;
-            btn.onclick = null;
+          if (btn.textContent.includes('Suscribirme') || btn.textContent.includes('Comprar')) {
+            if (subscription.plan === 'lifetime') {
+              btn.textContent = '✅ Miembro De por Vida 🏆';
+              btn.disabled = true;
+              btn.onclick = null;
+              btn.style.background = '#059669';
+            } else {
+              // Si tiene Premium mensual, puede upgradear a lifetime
+              if (btn.textContent.includes('De por Vida')) {
+                btn.textContent = '⬆️ Upgradear a De por Vida';
+              } else {
+                btn.textContent = '✅ Ya eres Premium';
+                btn.disabled = true;
+                btn.onclick = null;
+              }
+            }
           }
         });
       }
