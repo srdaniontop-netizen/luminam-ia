@@ -397,7 +397,7 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
         console.error('Error:', error);
         
         if (error.message.includes('API Key')) {
-          return `⚠️ **Error de API Key**\n\nHubo un problema con la API Key configurada.\n\n**Soluciones:**\n- Contacta al administrador: luminomia@gmail.com\n- O usa el botón "🔑 API KEY" para configurar una nueva`;
+          return `⚠️ **Error de API Key**\n\nHubo un problema con la API Key configurada.\n\n**Soluciones:**\n- Contacta al administrador: ialuminom@gmail.com\n- O usa el botón "🔑 API KEY" para configurar una nueva`;
         }
         
         return `⚠️ **Error de conexión**\n\n${error.message}\n\n**Soluciones:**\n- Verifica tu API Key\n- Espera 10 segundos e intenta de nuevo\n- Recarga la página si persiste`;
@@ -612,12 +612,14 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
         // Mostrar mensaje al usuario
         if (error.code === 'permission-denied') {
           historyList.innerHTML = '<div class="history-item" style="color:#ff6b6b;">⚠️ Acceso denegado. Actualiza las reglas de Firebase.</div>';
+        } else if (error.code === 'failed-precondition') {
+          historyList.innerHTML = '<div class="history-item" style="color:#fbbf24;">⚠️ Firestore no está configurado. Revisa Firebase Console.</div>';
         } else {
-          historyList.innerHTML = '<div class="history-item" style="color:#ff6b6b;">⚠️ Error al cargar. Usando caché local...</div>';
+          historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
         }
         
-        // Fallback a localStorage
-        setTimeout(() => loadFromLocalStorage(), 1000);
+        // NO usar localStorage como fallback - queremos que el usuario vea que Firebase no está funcionando
+        console.log('⚠️ No se usará localStorage - esperando configuración de Firebase');
       }
     }
 
