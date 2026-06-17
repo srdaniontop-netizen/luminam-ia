@@ -175,7 +175,25 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDzS5dYHznoTUsYYxWxfcA5JAHPMOJkSMA",
+      authDomain: "luminom-ia.firebaseapp.com",
+      projectId: "luminom-ia",
+      storageBucket: "luminom-ia.firebasestorage.app",
+      messagingSenderId: "532433042280",
+      appId: "1:532433042280:web:ae5f09598957e2bf8a34dd"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    console.log('✅ Firebase inicializado correctamente');
 
     // Sistema de Autenticación
     const Auth = {
@@ -457,27 +475,61 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       sendMessage();
     }
 
-    function saveCurrentChat() {
+    async function saveCurrentChat() {
+      if (conversationHistory.length === 0) return;
+      
+      const session = Auth.getSession();
+      const title = conversationHistory[0]?.content.substring(0, 50) + '...';
+      
+      try {
+        if (currentChatId) {
+          // Actualizar chat existente en Firebase
+          const chatRef = doc(db, 'chats', currentChatId);
+          await updateDoc(chatRef, {
+            title,
+            messages: conversationHistory,
+            updatedAt: new Date().toISOString()
+          });
+        } else {
+          // Crear nuevo chat en Firebase
+          const docRef = await addDoc(collection(db, 'chats'), {
+            userId: session.userId,
+            title,
+            messages: conversationHistory,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          currentChatId = docRef.id;
+        }
+        
+        await loadChatHistory();
+      } catch (error) {
+        console.error('Error al guardar chat en Firebase:', error);
+        // Fallback a localStorage si Firebase falla
+        saveToLocalStorage();
+      }
+    }
+
+    function saveToLocalStorage() {
       if (conversationHistory.length === 0) return;
       
       const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
       const session = Auth.getSession();
+      const title = conversationHistory[0]?.content.substring(0, 50) + '...';
       
       if (currentChatId) {
-        // Actualizar chat existente
         const chatIndex = chats.findIndex(c => c.id === currentChatId);
         if (chatIndex !== -1) {
           chats[chatIndex].messages = conversationHistory;
           chats[chatIndex].updatedAt = new Date().toISOString();
-          chats[chatIndex].title = conversationHistory[0]?.content.substring(0, 50) + '...';
+          chats[chatIndex].title = title;
         }
       } else {
-        // Crear nuevo chat
         currentChatId = Date.now().toString();
         chats.push({
           id: currentChatId,
           userId: session.userId,
-          title: conversationHistory[0]?.content.substring(0, 50) + '...',
+          title,
           messages: conversationHistory,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -485,10 +537,49 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       }
       
       localStorage.setItem('luminom_chats', JSON.stringify(chats));
-      loadChatHistory();
     }
 
-    function loadChatHistory() {
+    async function loadChatHistory() {
+      const session = Auth.getSession();
+      
+      try {
+        // Cargar desde Firebase
+        const q = query(
+          collection(db, 'chats'), 
+          where('userId', '==', session.userId),
+          orderBy('updatedAt', 'desc')
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const userChats = [];
+        
+        querySnapshot.forEach((doc) => {
+          userChats.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        const historyList = document.getElementById('historyList');
+        if (userChats.length === 0) {
+          historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
+          return;
+        }
+        
+        historyList.innerHTML = userChats.map(chat => `
+          <div class="history-item" onclick="loadChat('${chat.id}')">
+            <div style="font-weight:600;margin-bottom:0.2rem;color:var(--navy);">${chat.title}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error al cargar historial de Firebase:', error);
+        // Fallback a localStorage
+        loadFromLocalStorage();
+      }
+    }
+
+    function loadFromLocalStorage() {
       const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
       const session = Auth.getSession();
       const userChats = chats.filter(c => c.userId === session.userId).sort((a, b) => 
@@ -509,36 +600,73 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       `).join('');
     }
 
-    function loadChat(chatId) {
-      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
-      const chat = chats.find(c => c.id === chatId);
-      
-      if (!chat) return;
-      
-      currentChatId = chatId;
-      conversationHistory = chat.messages;
-      
-      const messagesDiv = document.getElementById('messages');
-      messagesDiv.innerHTML = '';
-      
-      conversationHistory.forEach(msg => {
-        addMessage(msg.content, msg.role === 'user');
-      });
-    }
-
-    function deleteChat(chatId) {
-      if (!confirm('¿Eliminar esta conversación?')) return;
-      
-      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
-      const filtered = chats.filter(c => c.id !== chatId);
-      localStorage.setItem('luminom_chats', JSON.stringify(filtered));
-      
-      if (currentChatId === chatId) {
-        newChat();
-      } else {
-        loadChatHistory();
+    async function loadChat(chatId) {
+      try {
+        // Cargar desde Firebase
+        const chatDoc = await getDocs(query(collection(db, 'chats'), where('__name__', '==', chatId)));
+        
+        if (!chatDoc.empty) {
+          const chatData = chatDoc.docs[0].data();
+          currentChatId = chatId;
+          conversationHistory = chatData.messages;
+          
+          const messagesDiv = document.getElementById('messages');
+          messagesDiv.innerHTML = '';
+          
+          conversationHistory.forEach(msg => {
+            addMessage(msg.content, msg.role === 'user');
+          });
+        }
+      } catch (error) {
+        console.error('Error al cargar chat de Firebase:', error);
+        // Fallback a localStorage
+        const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
+        const chat = chats.find(c => c.id === chatId);
+        
+        if (!chat) return;
+        
+        currentChatId = chatId;
+        conversationHistory = chat.messages;
+        
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML = '';
+        
+        conversationHistory.forEach(msg => {
+          addMessage(msg.content, msg.role === 'user');
+        });
       }
     }
+
+    async function deleteChat(chatId) {
+      if (!confirm('¿Eliminar esta conversación?')) return;
+      
+      try {
+        // Eliminar de Firebase
+        await deleteDoc(doc(db, 'chats', chatId));
+        
+        if (currentChatId === chatId) {
+          newChat();
+        } else {
+          await loadChatHistory();
+        }
+      } catch (error) {
+        console.error('Error al eliminar chat de Firebase:', error);
+        // Fallback a localStorage
+        const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
+        const filtered = chats.filter(c => c.id !== chatId);
+        localStorage.setItem('luminom_chats', JSON.stringify(filtered));
+        
+        if (currentChatId === chatId) {
+          newChat();
+        } else {
+          loadFromLocalStorage();
+        }
+      }
+    }
+
+    // Hacer funciones globales
+    window.loadChat = loadChat;
+    window.deleteChat = deleteChat;
 
     // Auto-resize textarea
     document.getElementById('userInput').addEventListener('input', function() {

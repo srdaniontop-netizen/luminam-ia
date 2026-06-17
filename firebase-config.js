@@ -2,18 +2,13 @@
 // Firebase Firestore permite sincronización multi-dispositivo SIN backend
 
 const firebaseConfig = {
-  // INSTRUCCIONES: Reemplaza estos valores con tu proyecto de Firebase
-  // 1. Ve a https://console.firebase.google.com/
-  // 2. Crea un nuevo proyecto llamado "luminom-ia"
-  // 3. Agrega una app web
-  // 4. Copia la configuración aquí
-  
-  apiKey: "TU_API_KEY_AQUI",
+  apiKey: "AIzaSyDzS5dYHznoTUsYYxWxfcA5JAHPMOJkSMA",
   authDomain: "luminom-ia.firebaseapp.com",
+  databaseURL: "https://luminom-ia-default-rtdb.firebaseio.com",
   projectId: "luminom-ia",
-  storageBucket: "luminom-ia.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
+  storageBucket: "luminom-ia.firebasestorage.app",
+  messagingSenderId: "532433042280",
+  appId: "1:532433042280:web:ae5f09598957e2bf8a34dd"
 };
 
 // Inicializar Firebase (se hace automáticamente al cargar)
@@ -41,7 +36,7 @@ async function initFirebase() {
   }
 }
 
-// Sistema de fallback: si Firebase no está configurado, usa localStorage
-const USE_FIREBASE = firebaseConfig.apiKey !== "TU_API_KEY_AQUI";
+// Firebase está configurado ✅
+const USE_FIREBASE = true;
 
 export { initFirebase, USE_FIREBASE };

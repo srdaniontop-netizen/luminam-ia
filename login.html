@@ -159,33 +159,127 @@
   </div>
 
 
-  <script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyDzS5dYHznoTUsYYxWxfcA5JAHPMOJkSMA",
+      authDomain: "luminom-ia.firebaseapp.com",
+      projectId: "luminom-ia",
+      storageBucket: "luminom-ia.firebasestorage.app",
+      messagingSenderId: "532433042280",
+      appId: "1:532433042280:web:ae5f09598957e2bf8a34dd"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    console.log('✅ Firebase inicializado correctamente');
+
     const Auth = {
-      register(name, email, password, carrera) {
-        const users = this.getUsers();
-        if (users.find(u => u.email === email))
-          return { ok: false, error: 'Este correo ya está registrado.' };
-        const user = { id: Date.now().toString(), name, email, password, carrera, createdAt: new Date().toISOString() };
-        users.push(user);
-        localStorage.setItem('luminom_users', JSON.stringify(users));
-        return { ok: true, user };
+      async register(name, email, password, carrera) {
+        try {
+          // Crear usuario en Firebase Auth
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          // Guardar datos adicionales en Firestore
+          await setDoc(doc(db, 'users', user.uid), {
+            name,
+            email,
+            carrera,
+            createdAt: new Date().toISOString()
+          });
+
+          // Guardar sesión local
+          const session = { userId: user.uid, name, email, carrera };
+          localStorage.setItem('luminom_session', JSON.stringify(session));
+
+          return { ok: true, user: session };
+        } catch (error) {
+          console.error('Error en registro:', error);
+          let errorMsg = 'Error al registrar';
+          
+          if (error.code === 'auth/email-already-in-use') {
+            errorMsg = 'Este correo ya está registrado';
+          } else if (error.code === 'auth/weak-password') {
+            errorMsg = 'La contraseña debe tener al menos 6 caracteres';
+          } else if (error.code === 'auth/invalid-email') {
+            errorMsg = 'Correo electrónico inválido';
+          }
+          
+          return { ok: false, error: errorMsg };
+        }
       },
-      login(email, password) {
-        const users = this.getUsers();
-        const user = users.find(u => u.email === email && u.password === password);
-        if (!user) return { ok: false, error: 'Correo o contraseña incorrectos.' };
-        const session = { userId: user.id, name: user.name, email: user.email, carrera: user.carrera };
-        localStorage.setItem('luminom_session', JSON.stringify(session));
-        return { ok: true, user: session };
+
+      async login(email, password) {
+        try {
+          // Autenticar con Firebase
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          // Obtener datos del usuario desde Firestore
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const session = { 
+              userId: user.uid, 
+              name: userData.name, 
+              email: userData.email, 
+              carrera: userData.carrera 
+            };
+            
+            localStorage.setItem('luminom_session', JSON.stringify(session));
+            return { ok: true, user: session };
+          } else {
+            return { ok: false, error: 'Usuario no encontrado' };
+          }
+        } catch (error) {
+          console.error('Error en login:', error);
+          let errorMsg = 'Correo o contraseña incorrectos';
+          
+          if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            errorMsg = 'Correo o contraseña incorrectos';
+          } else if (error.code === 'auth/invalid-email') {
+            errorMsg = 'Correo electrónico inválido';
+          } else if (error.code === 'auth/too-many-requests') {
+            errorMsg = 'Demasiados intentos. Intenta más tarde';
+          }
+          
+          return { ok: false, error: errorMsg };
+        }
       },
-      logout() { localStorage.removeItem('luminom_session'); window.location.href = 'index.html'; },
-      getSession() { try { return JSON.parse(localStorage.getItem('luminom_session')); } catch { return null; } },
-      getUsers() { try { return JSON.parse(localStorage.getItem('luminom_users') || '[]'); } catch { return []; } },
+
+      logout() { 
+        localStorage.removeItem('luminom_session'); 
+        window.location.href = 'index.html'; 
+      },
+
+      getSession() { 
+        try { 
+          return JSON.parse(localStorage.getItem('luminom_session')); 
+        } catch { 
+          return null; 
+        } 
+      },
+
       requireAuth() {
-        if (!this.getSession()) { window.location.href = 'login.html?next=tutor'; return false; }
+        if (!this.getSession()) { 
+          window.location.href = 'login.html?next=tutor'; 
+          return false; 
+        }
         return true;
       }
     };
+
+    // Hacer Auth global para que las funciones puedan accederlo
+    window.Auth = Auth;
 
     // Redirigir si ya está logueado
     if (Auth.getSession()) {
@@ -214,7 +308,7 @@
       document.querySelectorAll('.field-error').forEach(e => e.textContent = '');
     }
 
-    function handleLogin(event) {
+    async function handleLogin(event) {
       event.preventDefault();
       
       const email = document.getElementById('loginEmail').value.trim();
@@ -227,7 +321,7 @@
         return;
       }
       
-      const result = Auth.login(email, password);
+      const result = await Auth.login(email, password);
       
       if (!result.ok) {
         document.getElementById('loginPasswordError').textContent = result.error;
@@ -239,7 +333,7 @@
       window.location.href = next + '.html';
     }
 
-    function handleRegister(event) {
+    async function handleRegister(event) {
       event.preventDefault();
       
       const name = document.getElementById('registerName').value.trim();
@@ -275,14 +369,13 @@
         return;
       }
       
-      const result = Auth.register(name, email, password, carrera);
+      const result = await Auth.register(name, email, password, carrera);
       
       if (!result.ok) {
         document.getElementById('registerEmailError').textContent = result.error;
         return;
       }
       
-      Auth.login(email, password);
       window.location.href = 'tutor.html';
     }
   </script>
