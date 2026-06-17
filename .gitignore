@@ -50,3 +50,10 @@ temp/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+
+# Private API Keys
+TU_API_KEY_PRIVADA.txt
+*_PRIVADA.txt
+*.key
+api_keys/
