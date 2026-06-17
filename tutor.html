@@ -61,7 +61,10 @@
     .sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);padding:1.5rem;overflow-y:auto;}
     .sidebar h3{font-family:var(--font-display);font-size:1rem;margin-bottom:1rem;color:var(--navy);}
     .sidebar-btn{width:100%;background:var(--gold);color:var(--navy);padding:0.75rem;border-radius:var(--radius-sm);border:none;font-weight:600;cursor:pointer;transition:var(--t);margin-bottom:1.5rem;}
-    .sidebar-btn:hover{background:var(--gold-light);}
+    .sidebar-btn:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 4px 12px rgba(201,168,76,0.3);}
+    
+    .sidebar-btn-special{width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:0.75rem;border-radius:var(--radius-sm);border:none;font-weight:600;cursor:pointer;transition:var(--t);margin-bottom:1rem;box-shadow:0 4px 12px rgba(102,126,234,0.3);}
+    .sidebar-btn-special:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(102,126,234,0.5);}
     .history-item{padding:0.65rem;background:var(--off-white);border-radius:var(--radius-sm);margin-bottom:0.5rem;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;transition:var(--t);}
     .history-item:hover{background:rgba(201,168,76,0.1);}
 
@@ -75,13 +78,15 @@
     .messages::-webkit-scrollbar-thumb:hover{background:rgba(201,168,76,0.5);}
     
     /* Messages */
-    .message{display:flex;gap:1rem;align-items:flex-start;animation:slideIn 0.4s ease;}
-    @keyframes slideIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    .message{display:flex;gap:1rem;align-items:flex-start;animation:slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);}
+    @keyframes slideIn{from{opacity:0;transform:translateY(30px) scale(0.95);}to{opacity:1;transform:translateY(0) scale(1);}}
     .message.user{flex-direction:row-reverse;}
-    .avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.9rem;flex-shrink:0;}
-    .message.bot .avatar{background:var(--gold);color:var(--navy);}
-    .message.user .avatar{background:var(--navy);color:var(--gold);}
-    .bubble{max-width:65%;padding:1.2rem 1.5rem;border-radius:var(--radius-md);line-height:1.7;box-shadow:var(--shadow-sm);}
+    .avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.9rem;flex-shrink:0;animation:popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);}
+    @keyframes popIn{from{transform:scale(0) rotate(-180deg);}to{transform:scale(1) rotate(0deg);}}
+    .message.bot .avatar{background:var(--gold);color:var(--navy);box-shadow:0 4px 12px rgba(201,168,76,0.3);}
+    .message.user .avatar{background:var(--navy);color:var(--gold);box-shadow:0 4px 12px rgba(10,22,40,0.2);}
+    .bubble{max-width:65%;padding:1.2rem 1.5rem;border-radius:var(--radius-md);line-height:1.7;box-shadow:var(--shadow-sm);transition:transform 0.2s;}
+    .bubble:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(10,22,40,0.12);}
     .message.bot .bubble{background:var(--white);border:1px solid var(--border);}
     .message.user .bubble{background:var(--navy);color:var(--white);}
     
@@ -91,15 +96,27 @@
     .welcome h2 .gold{color:var(--gold);font-style:italic;}
     .welcome p{font-size:1rem;color:var(--text-secondary);margin-bottom:2rem;}
     .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;}
-    .quick-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.2rem;text-align:left;cursor:pointer;transition:var(--t);}
-    .quick-card:hover{border-color:var(--border-gold);box-shadow:var(--shadow-sm);transform:translateY(-3px);}
+    .quick-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.2rem;text-align:left;cursor:pointer;transition:var(--t);position:relative;overflow:hidden;}
+    .quick-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(201,168,76,0.1),transparent);transform:translateX(-100%);transition:transform 0.3s;}
+    .quick-card:hover{border-color:var(--border-gold);box-shadow:var(--shadow-md);transform:translateY(-5px) scale(1.02);}
+    .quick-card:hover::before{transform:translateX(0);}
+    .quick-card:active{transform:translateY(-2px) scale(0.98);}
     .quick-icon{font-size:1.6rem;margin-bottom:0.5rem;display:block;}
     .quick-title{font-weight:600;font-size:0.9rem;color:var(--navy);}
     
     /* Input */
     .input-area{padding:1.5rem 2rem;background:var(--white);border-top:1px solid var(--border);}
-    .input-wrapper{max-width:1100px;margin:0 auto;display:flex;gap:1rem;align-items:flex-end;}
-    .input-wrapper textarea{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:0.85rem 1.1rem;font-size:0.92rem;color:var(--navy);background:var(--white);resize:none;min-height:56px;max-height:150px;font-family:inherit;transition:var(--t);}
+    .input-wrapper{max-width:1100px;margin:0 auto;display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;}
+    
+    .btn-attach{display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:var(--off-white);border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:1.5rem;cursor:pointer;transition:var(--t);flex-shrink:0;}
+    .btn-attach:hover{border-color:var(--gold);background:rgba(201,168,76,0.1);transform:scale(1.05);}
+    
+    #filePreview{width:100%;display:flex;gap:0.5rem;align-items:center;padding:0.5rem;background:var(--off-white);border-radius:var(--radius-sm);margin-bottom:0.5rem;font-size:0.85rem;}
+    #filePreview img{max-width:60px;max-height:60px;border-radius:4px;object-fit:cover;}
+    #filePreview .file-info{flex:1;}
+    #filePreview .file-remove{color:var(--danger);cursor:pointer;font-weight:600;}
+    
+    .input-wrapper textarea{flex:1;min-width:200px;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:0.85rem 1.1rem;font-size:0.92rem;color:var(--navy);background:var(--white);resize:none;min-height:56px;max-height:150px;font-family:inherit;transition:var(--t);}
     .input-wrapper textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.12);}
     .input-wrapper textarea::placeholder{color:var(--text-muted);}
     .btn-send{background:var(--gold);color:var(--navy);border:none;padding:0.85rem 2rem;border-radius:100px;font-weight:700;font-size:0.95rem;cursor:pointer;transition:var(--t);}
@@ -149,6 +166,11 @@
     <aside class="sidebar">
       <button class="sidebar-btn" id="newChatBtn">+ Nueva conversación</button>
       
+      <!-- Botón de Plan de Estudio -->
+      <button class="sidebar-btn-special" id="studyPlanBtn">
+        📚 Generar Plan de Estudio
+      </button>
+      
       <!-- Contador visual de preguntas -->
       <div id="questionCounter" style="display:none;" class="question-counter">
         <div class="counter-label">Preguntas hoy</div>
@@ -195,9 +217,18 @@
 
       <div class="input-area">
         <div class="input-wrapper">
+          <!-- Botón para adjuntar archivos -->
+          <label for="fileInput" class="btn-attach" title="Adjuntar imagen o archivo">
+            📎
+          </label>
+          <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
+          
+          <!-- Preview de archivo adjunto -->
+          <div id="filePreview" style="display:none;"></div>
+          
           <textarea 
             id="userInput" 
-            placeholder="Escribe tu pregunta aquí..."
+            placeholder="Escribe tu pregunta aquí o adjunta una imagen..."
             rows="1"
           ></textarea>
           <button class="btn-send" id="sendBtn">Enviar</button>
@@ -438,6 +469,239 @@
     // Cargar suscripción al iniciar
     loadSubscription();
     document.getElementById('welcomeName').textContent = session.name;
+
+    // ========================================
+    // GENERADOR DE PLAN DE ESTUDIO
+    // ========================================
+    
+    document.getElementById('studyPlanBtn').addEventListener('click', () => {
+      hideWelcome();
+      const messagesDiv = document.getElementById('messages');
+      
+      // Crear formulario simple
+      const formHTML = `
+        <div class="message bot" style="max-width:600px;margin:2rem auto;">
+          <div class="avatar">L</div>
+          <div class="bubble" style="max-width:100%;">
+            <h3 style="margin-bottom:1rem;color:var(--navy);">📚 Generar Plan de Estudio</h3>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;">¿Qué materia quieres estudiar?</label>
+              <input type="text" id="studySubject" placeholder="Ej: Cálculo Diferencial" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;" />
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;">¿Cuánto tiempo tienes?</label>
+              <select id="studyTime" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;">
+                <option value="1 semana">1 semana</option>
+                <option value="2 semanas" selected>2 semanas</option>
+                <option value="1 mes">1 mes</option>
+                <option value="2 meses">2 meses</option>
+              </select>
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;">¿Cuántas horas al día puedes estudiar?</label>
+              <select id="studyHours" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;">
+                <option value="1 hora">1 hora</option>
+                <option value="2 horas" selected>2 horas</option>
+                <option value="3 horas">3 horas</option>
+                <option value="4 horas">4 horas</option>
+                <option value="5+ horas">5+ horas</option>
+              </select>
+            </div>
+            <button onclick="generateStudyPlan()" style="width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:0.85rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:1rem;">
+              ✨ Generar Mi Plan
+            </button>
+          </div>
+        </div>
+      `;
+      
+      messagesDiv.innerHTML = formHTML;
+    });
+    
+    window.generateStudyPlan = async function() {
+      const subject = document.getElementById('studySubject').value.trim();
+      const time = document.getElementById('studyTime').value;
+      const hours = document.getElementById('studyHours').value;
+      
+      if (!subject) {
+        alert('Por favor ingresa la materia que quieres estudiar');
+        return;
+      }
+      
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = '';
+      
+      const promptText = `Crea un plan de estudio detallado para ${subject}. 
+Duración: ${time}
+Tiempo disponible: ${hours} al día
+Carrera: ${session.carrera}
+
+Formato del plan:
+- Organizado por días/semanas
+- Temas específicos por sesión
+- Objetivos claros
+- Recursos recomendados
+- Consejos de estudio`;
+      
+      // Mostrar pregunta del usuario
+      addMessage(`📚 Generar plan de estudio para:\n• Materia: ${subject}\n• Tiempo: ${time}\n• Horas diarias: ${hours}`, true);
+      
+      conversationHistory = []; // Limpiar historia para este plan
+      conversationHistory.push({ role: 'user', content: promptText });
+      
+      showTyping();
+      const aiResponse = await callGroqAPI(promptText);
+      hideTyping();
+      
+      addMessage(aiResponse, false);
+      conversationHistory.push({ role: 'assistant', content: aiResponse });
+      
+      saveCurrentChat();
+    };
+
+    // ========================================
+    // MANEJO DE ARCHIVOS E IMÁGENES
+    // ========================================
+    
+    let attachedFile = null;
+    let attachedFileDataURL = null;
+    
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Validar tamaño (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('⚠️ El archivo es muy grande. Máximo 5MB.');
+        e.target.value = '';
+        return;
+      }
+      
+      attachedFile = file;
+      
+      // Convertir a base64 para imágenes
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          attachedFileDataURL = event.target.result;
+          showFilePreview(file, event.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        showFilePreview(file, null);
+      }
+    });
+    
+    function showFilePreview(file, dataURL) {
+      const preview = document.getElementById('filePreview');
+      preview.style.display = 'flex';
+      
+      let previewHTML = '';
+      if (dataURL && file.type.startsWith('image/')) {
+        previewHTML = `<img src="${dataURL}" alt="Preview" />`;
+      } else {
+        previewHTML = `<span style="font-size:2rem;">📄</span>`;
+      }
+      
+      preview.innerHTML = `
+        ${previewHTML}
+        <div class="file-info">
+          <strong>${file.name}</strong><br>
+          <span style="color:var(--text-muted);font-size:0.8rem;">${(file.size / 1024).toFixed(1)} KB</span>
+        </div>
+        <span class="file-remove" onclick="removeFile()">✕</span>
+      `;
+    }
+    
+    window.removeFile = function() {
+      attachedFile = null;
+      attachedFileDataURL = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('filePreview').style.display = 'none';
+    };
+
+    // ========================================
+    // MODIFICAR sendMessage PARA INCLUIR ARCHIVOS
+    // ========================================
+    
+    // Guardar referencia a la función original
+    const originalSendMessage = sendMessage;
+    
+    // Reemplazar con nueva versión que maneja archivos
+    sendMessage = async function() {
+      const input = document.getElementById('userInput');
+      const message = input.value.trim();
+      
+      if (!message && !attachedFile) return;
+      
+      // Verificar límite de preguntas
+      const status = canAskQuestion();
+      
+      if (!status.allowed) {
+        alert(`⚠️ Has alcanzado el límite de ${status.limit} preguntas diarias del plan gratuito.\n\n💎 Mejora a Premium para preguntas ilimitadas desde $14,900/mes o De por Vida por $299,000.\n\nVisita la página de Servicios para actualizar tu plan.`);
+        
+        if (confirm('¿Quieres ver los planes disponibles?')) {
+          window.open('servicios.html', '_blank');
+        }
+        return;
+      }
+      
+      if (!API_CONFIG.key) {
+        alert('⚠️ Error: No hay API Key configurada. Contacta al administrador.');
+        return;
+      }
+      
+      input.value = '';
+      input.style.height = 'auto';
+      
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Enviando...';
+      
+      // Construir mensaje con contexto del archivo
+      let fullMessage = message;
+      
+      if (attachedFile) {
+        if (attachedFile.type.startsWith('image/')) {
+          fullMessage = `[Imagen adjunta: ${attachedFile.name}]\n\n${message || 'Analiza esta imagen y explícame qué ves'}`;
+          // TODO: Integrar API de visión (GPT-4 Vision, Claude Vision, etc.)
+          // Por ahora, solo mencionamos que hay imagen
+        } else {
+          fullMessage = `[Archivo adjunto: ${attachedFile.name}]\n\n${message}`;
+        }
+        
+        removeFile();
+      }
+      
+      addMessage(message || '📎 Archivo adjunto', true);
+      conversationHistory.push({ role: 'user', content: fullMessage });
+      
+      showTyping();
+      
+      const aiResponse = await callGroqAPI(fullMessage);
+      
+      hideTyping();
+      addMessage(aiResponse, false);
+      
+      conversationHistory.push({ role: 'assistant', content: aiResponse });
+      
+      if (userPlan === 'free') {
+        incrementQuestionCount();
+      }
+      
+      saveCurrentChat();
+      
+      const stats = JSON.parse(localStorage.getItem('luminom_stats') || '{"totalQuestions":0,"totalConversations":0}');
+      stats.totalQuestions = (stats.totalQuestions || 0) + 1;
+      localStorage.setItem('luminom_stats', JSON.stringify(stats));
+      
+      if (conversationHistory.length > 20) {
+        conversationHistory = conversationHistory.slice(-20);
+      }
+      
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Enviar';
+      input.focus();
+    };
 
     // Configuración de API (Key pre-configurada y ofuscada)
     const API_CONFIG = {
