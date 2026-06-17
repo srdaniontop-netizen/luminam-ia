@@ -38,6 +38,16 @@
     .btn-gold{background:var(--gold);color:var(--navy);border:none;font-weight:600;}
     .btn-gold:hover{background:var(--gold-light);}
     
+    /* Premium Badge */
+    .premium-badge{display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy);padding:0.35rem 0.9rem;border-radius:100px;font-size:0.75rem;font-weight:700;letter-spacing:0.3px;}
+    .premium-badge.free{background:#6b7280;color:white;}
+    
+    /* Question Limit Banner */
+    .limit-banner{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#78350f;padding:0.7rem 1.2rem;border-radius:var(--radius-sm);margin-bottom:1rem;font-size:0.85rem;text-align:center;font-weight:600;box-shadow:var(--shadow-sm);}
+    .limit-banner.warning{background:linear-gradient(135deg,#f87171,#ef4444);color:white;}
+    .limit-banner a{color:inherit;text-decoration:underline;font-weight:700;}
+    .limit-banner a:hover{opacity:0.8;}
+    
     /* Chat Layout */
     .chat-layout{flex:1;display:flex;overflow:hidden;}
     .sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);padding:1.5rem;overflow-y:auto;}
@@ -119,6 +129,7 @@
       </a>
       <div class="nav-actions">
         <div class="nav-user">
+          <span class="premium-badge free" id="planBadge">Gratis</span>
           <span class="nav-user-name" id="userName">Cargando...</span>
         </div>
         <button class="btn-nav" id="logoutBtn">Salir</button>
@@ -129,6 +140,10 @@
   <div class="chat-layout">
     <aside class="sidebar">
       <button class="sidebar-btn" id="newChatBtn">+ Nueva conversación</button>
+      
+      <!-- Banner de límite de preguntas para usuarios gratuitos -->
+      <div id="limitBanner" style="display:none;"></div>
+      
       <h3>Historial</h3>
       <div id="historyList">
         <div class="history-item">Sin conversaciones previas</div>
@@ -234,6 +249,157 @@
     // Mostrar nombre del usuario
     const session = Auth.getSession();
     document.getElementById('userName').textContent = session.name;
+
+    // ========================================
+    // SISTEMA DE SUSCRIPCIÓN Y LÍMITES
+    // ========================================
+    
+    let userSubscription = null;
+    let userPlan = 'free'; // free, premium, lifetime
+    
+    // Cargar suscripción desde Firestore
+    async function loadSubscription() {
+      try {
+        const userDoc = await db.collection('users').doc(session.userId).get();
+        
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          userSubscription = userData.subscription || null;
+          
+          if (userSubscription && userSubscription.status === 'active') {
+            // Verificar si no ha expirado (solo para plan mensual)
+            if (userSubscription.plan === 'premium' && userSubscription.expiryDate !== 'never') {
+              const expiryDate = new Date(userSubscription.expiryDate);
+              if (expiryDate < new Date()) {
+                userPlan = 'free';
+                userSubscription = null;
+              } else {
+                userPlan = 'premium';
+              }
+            } else if (userSubscription.plan === 'lifetime') {
+              userPlan = 'lifetime';
+            } else {
+              userPlan = userSubscription.plan;
+            }
+          }
+        }
+        
+        console.log('💎 Plan del usuario:', userPlan);
+        updatePlanBadge();
+        updateLimitBanner();
+        
+      } catch (error) {
+        console.error('Error al cargar suscripción:', error);
+        userPlan = 'free';
+        updatePlanBadge();
+        updateLimitBanner();
+      }
+    }
+    
+    // Actualizar badge de plan en navegación
+    function updatePlanBadge() {
+      const badge = document.getElementById('planBadge');
+      
+      if (userPlan === 'lifetime') {
+        badge.textContent = '👑 De por Vida';
+        badge.className = 'premium-badge';
+      } else if (userPlan === 'premium') {
+        badge.textContent = '⭐ Premium';
+        badge.className = 'premium-badge';
+      } else {
+        badge.textContent = '📝 Gratis';
+        badge.className = 'premium-badge free';
+      }
+    }
+    
+    // Sistema de límite de preguntas para usuarios gratuitos
+    const FREE_DAILY_LIMIT = 10;
+    
+    function getQuestionsToday() {
+      const today = new Date().toDateString();
+      const stored = localStorage.getItem('luminom_questions_count');
+      
+      if (!stored) {
+        return { date: today, count: 0 };
+      }
+      
+      try {
+        const data = JSON.parse(stored);
+        // Si es un nuevo día, resetear contador
+        if (data.date !== today) {
+          return { date: today, count: 0 };
+        }
+        return data;
+      } catch {
+        return { date: today, count: 0 };
+      }
+    }
+    
+    function incrementQuestionCount() {
+      const data = getQuestionsToday();
+      data.count += 1;
+      localStorage.setItem('luminom_questions_count', JSON.stringify(data));
+      updateLimitBanner();
+      return data.count;
+    }
+    
+    function canAskQuestion() {
+      // Usuarios premium y lifetime tienen preguntas ilimitadas
+      if (userPlan === 'premium' || userPlan === 'lifetime') {
+        return { allowed: true, remaining: '∞' };
+      }
+      
+      // Usuarios gratuitos tienen límite diario
+      const data = getQuestionsToday();
+      const remaining = FREE_DAILY_LIMIT - data.count;
+      
+      return {
+        allowed: remaining > 0,
+        remaining: remaining,
+        count: data.count,
+        limit: FREE_DAILY_LIMIT
+      };
+    }
+    
+    // Actualizar banner de límite de preguntas
+    function updateLimitBanner() {
+      const banner = document.getElementById('limitBanner');
+      const status = canAskQuestion();
+      
+      if (userPlan === 'premium' || userPlan === 'lifetime') {
+        // No mostrar banner para usuarios premium
+        banner.style.display = 'none';
+        return;
+      }
+      
+      banner.style.display = 'block';
+      
+      if (!status.allowed) {
+        // Límite alcanzado
+        banner.className = 'limit-banner warning';
+        banner.innerHTML = `
+          ⚠️ Límite diario alcanzado (${status.count}/${status.limit} preguntas).<br>
+          <a href="servicios.html">Mejora a Premium</a> para preguntas ilimitadas.
+        `;
+      } else if (status.remaining <= 3) {
+        // Cerca del límite
+        banner.className = 'limit-banner warning';
+        banner.innerHTML = `
+          ⚠️ Solo te quedan ${status.remaining} preguntas hoy.<br>
+          <a href="servicios.html">Mejora a Premium</a> para acceso ilimitado.
+        `;
+      } else {
+        // Normal
+        banner.className = 'limit-banner';
+        banner.innerHTML = `
+          📊 ${status.remaining} preguntas restantes hoy (Plan Gratis).<br>
+          <a href="servicios.html">Mejora a Premium</a> desde $14,900/mes.
+        `;
+      }
+    }
+    
+    // Cargar suscripción al iniciar
+    loadSubscription();
     document.getElementById('welcomeName').textContent = session.name;
 
     // Configuración de API (Key pre-configurada y ofuscada)
@@ -410,6 +576,21 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       
       if (!message) return;
       
+      // ============================================
+      // VERIFICAR LÍMITE DE PREGUNTAS (PLAN GRATIS)
+      // ============================================
+      const status = canAskQuestion();
+      
+      if (!status.allowed) {
+        alert(`⚠️ Has alcanzado el límite de ${status.limit} preguntas diarias del plan gratuito.\n\n💎 Mejora a Premium para preguntas ilimitadas desde $14,900/mes o De por Vida por $299,000.\n\nVisita la página de Servicios para actualizar tu plan.`);
+        
+        // Abrir página de servicios
+        if (confirm('¿Quieres ver los planes disponibles?')) {
+          window.open('servicios.html', '_blank');
+        }
+        return;
+      }
+      
       if (!API_CONFIG.key) {
         alert('⚠️ Error: No hay API Key configurada. Contacta al administrador.');
         return;
@@ -433,6 +614,13 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       addMessage(aiResponse, false);
       
       conversationHistory.push({ role: 'assistant', content: aiResponse });
+      
+      // ============================================
+      // INCREMENTAR CONTADOR DE PREGUNTAS
+      // ============================================
+      if (userPlan === 'free') {
+        incrementQuestionCount();
+      }
       
       // Guardar chat automáticamente
       saveCurrentChat();

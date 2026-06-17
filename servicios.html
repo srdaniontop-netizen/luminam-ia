@@ -371,7 +371,7 @@
         currency: 'COP',
         amountInCents: selectedPlan.amount,
         reference: `${planType}-${session.userId}-${Date.now()}`,
-        redirectUrl: window.location.origin + '/luminam-ia/payment-success.html'
+        redirectUrl: `${window.location.origin}/luminam-ia/payment-success.html?plan=${planType}`
       };
       
       // Crear formulario de pago de Wompi
