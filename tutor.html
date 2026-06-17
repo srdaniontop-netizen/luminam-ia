@@ -577,10 +577,9 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       try {
         console.log('🔵 Cargando historial desde Firebase...');
         
-        // Cargar desde Firebase
+        // Cargar desde Firebase SIN orderBy para evitar necesidad de índice
         const snapshot = await db.collection('chats')
           .where('userId', '==', session.userId)
-          .orderBy('updatedAt', 'desc')
           .get();
         
         const userChats = [];
@@ -590,6 +589,9 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
             ...doc.data()
           });
         });
+        
+        // Ordenar en JavaScript en lugar de Firestore
+        userChats.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
         
         console.log(`✅ Cargados ${userChats.length} chats desde Firebase`);
         
@@ -613,7 +615,11 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
         if (error.code === 'permission-denied') {
           historyList.innerHTML = '<div class="history-item" style="color:#ff6b6b;">⚠️ Acceso denegado. Actualiza las reglas de Firebase.</div>';
         } else if (error.code === 'failed-precondition') {
-          historyList.innerHTML = '<div class="history-item" style="color:#fbbf24;">⚠️ Firestore no está configurado. Revisa Firebase Console.</div>';
+          historyList.innerHTML = '<div class="history-item" style="color:#fbbf24;">⚠️ Firestore necesita un índice. Mira la consola para el enlace.</div>';
+          console.log('');
+          console.log('🔗 SOLUCIÓN: Haz click en el enlace de arriba para crear el índice automáticamente');
+          console.log('O ve a Firebase Console → Firestore → Índices y créalo manualmente');
+          console.log('');
         } else {
           historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
         }
