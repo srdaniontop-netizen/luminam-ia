@@ -4,8 +4,10 @@ service cloud.firestore {
     
     // Colección de usuarios
     match /users/{userId} {
+      // Permitir creación durante el registro (cuando auth.uid coincide)
+      allow create: if request.auth != null && request.auth.uid == userId;
       // Solo el usuario autenticado puede leer/escribir sus datos
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
       // El admin puede leer todos los usuarios
       allow read: if request.auth != null && 
                      exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
