@@ -199,10 +199,26 @@
 
     // Sistema de Autenticación
     const Auth = {
-      getSession() { try { return JSON.parse(localStorage.getItem('luminom_session')); } catch { return null; } },
-      logout() { localStorage.removeItem('luminom_session'); window.location.href = 'index.html'; },
+      getSession() { 
+        try { 
+          return JSON.parse(localStorage.getItem('luminom_session')); 
+        } catch { 
+          return null; 
+        } 
+      },
+      logout() { 
+        console.log('🔴 Cerrando sesión...');
+        localStorage.removeItem('luminom_session'); 
+        localStorage.removeItem('luminom_subscription');
+        console.log('✅ Sesión cerrada, redirigiendo...');
+        window.location.href = 'index.html'; 
+      },
       requireAuth() {
-        if (!this.getSession()) { window.location.href = 'login.html?next=tutor'; return false; }
+        if (!this.getSession()) { 
+          console.log('⚠️ No hay sesión, redirigiendo a login...');
+          window.location.href = 'login.html?next=tutor'; 
+          return false; 
+        }
         return true;
       }
     };
@@ -487,6 +503,8 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       const title = conversationHistory[0]?.content.substring(0, 50) + '...';
       
       try {
+        console.log('💾 Guardando chat en Firebase...');
+        
         if (currentChatId) {
           // Actualizar chat existente en Firebase
           await db.collection('chats').doc(currentChatId).update({
@@ -494,6 +512,7 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
             messages: conversationHistory,
             updatedAt: new Date().toISOString()
           });
+          console.log('✅ Chat actualizado en Firebase:', currentChatId);
         } else {
           // Crear nuevo chat en Firebase
           const docRef = await db.collection('chats').add({
@@ -504,12 +523,17 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
             updatedAt: new Date().toISOString()
           });
           currentChatId = docRef.id;
+          console.log('✅ Nuevo chat creado en Firebase:', currentChatId);
         }
         
         await loadChatHistory();
       } catch (error) {
-        console.error('Error al guardar chat en Firebase:', error);
+        console.error('❌ Error al guardar chat en Firebase:', error);
+        console.error('Código de error:', error.code);
+        console.error('Mensaje:', error.message);
+        
         // Fallback a localStorage si Firebase falla
+        console.log('⚠️ Usando localStorage como fallback...');
         saveToLocalStorage();
       }
     }
@@ -545,8 +569,14 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
 
     async function loadChatHistory() {
       const session = Auth.getSession();
+      const historyList = document.getElementById('historyList');
+      
+      // Mostrar indicador de carga
+      historyList.innerHTML = '<div class="history-item">📁 Cargando historial...</div>';
       
       try {
+        console.log('🔵 Cargando historial desde Firebase...');
+        
         // Cargar desde Firebase
         const snapshot = await db.collection('chats')
           .where('userId', '==', session.userId)
@@ -561,7 +591,8 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
           });
         });
         
-        const historyList = document.getElementById('historyList');
+        console.log(`✅ Cargados ${userChats.length} chats desde Firebase`);
+        
         if (userChats.length === 0) {
           historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
           return;
@@ -574,9 +605,19 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
           </div>
         `).join('');
       } catch (error) {
-        console.error('Error al cargar historial de Firebase:', error);
+        console.error('❌ Error al cargar historial de Firebase:', error);
+        console.error('Código de error:', error.code);
+        console.error('Mensaje:', error.message);
+        
+        // Mostrar mensaje al usuario
+        if (error.code === 'permission-denied') {
+          historyList.innerHTML = '<div class="history-item" style="color:#ff6b6b;">⚠️ Acceso denegado. Actualiza las reglas de Firebase.</div>';
+        } else {
+          historyList.innerHTML = '<div class="history-item" style="color:#ff6b6b;">⚠️ Error al cargar. Usando caché local...</div>';
+        }
+        
         // Fallback a localStorage
-        loadFromLocalStorage();
+        setTimeout(() => loadFromLocalStorage(), 1000);
       }
     }
 
