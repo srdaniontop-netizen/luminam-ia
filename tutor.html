@@ -42,6 +42,14 @@
     .premium-badge{display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy);padding:0.35rem 0.9rem;border-radius:100px;font-size:0.75rem;font-weight:700;letter-spacing:0.3px;}
     .premium-badge.free{background:#6b7280;color:white;}
     
+    /* Question Counter */
+    .question-counter{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;text-align:center;}
+    .counter-number{font-family:var(--font-display);font-size:2.5rem;font-weight:700;color:var(--gold);margin:0.5rem 0;}
+    .counter-label{font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.5rem;}
+    .counter-bar{width:100%;height:6px;background:rgba(201,168,76,0.2);border-radius:10px;overflow:hidden;margin-top:0.5rem;}
+    .counter-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width 0.3s ease;border-radius:10px;}
+    .counter-bar-fill.warning{background:linear-gradient(90deg,#f59e0b,#ef4444);}
+    
     /* Question Limit Banner */
     .limit-banner{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#78350f;padding:0.7rem 1.2rem;border-radius:var(--radius-sm);margin-bottom:1rem;font-size:0.85rem;text-align:center;font-weight:600;box-shadow:var(--shadow-sm);}
     .limit-banner.warning{background:linear-gradient(135deg,#f87171,#ef4444);color:white;}
@@ -140,6 +148,15 @@
   <div class="chat-layout">
     <aside class="sidebar">
       <button class="sidebar-btn" id="newChatBtn">+ Nueva conversación</button>
+      
+      <!-- Contador visual de preguntas -->
+      <div id="questionCounter" style="display:none;" class="question-counter">
+        <div class="counter-label">Preguntas hoy</div>
+        <div class="counter-number" id="counterNumber">0/10</div>
+        <div class="counter-bar">
+          <div class="counter-bar-fill" id="counterBarFill" style="width:0%"></div>
+        </div>
+      </div>
       
       <!-- Banner de límite de preguntas para usuarios gratuitos -->
       <div id="limitBanner" style="display:none;"></div>
@@ -364,12 +381,32 @@
     // Actualizar banner de límite de preguntas
     function updateLimitBanner() {
       const banner = document.getElementById('limitBanner');
+      const counter = document.getElementById('questionCounter');
       const status = canAskQuestion();
       
       if (userPlan === 'premium' || userPlan === 'lifetime') {
-        // No mostrar banner para usuarios premium
+        // No mostrar banner ni contador para usuarios premium
         banner.style.display = 'none';
+        counter.style.display = 'none';
         return;
+      }
+      
+      // Mostrar contador visual
+      counter.style.display = 'block';
+      const counterNumber = document.getElementById('counterNumber');
+      const counterBarFill = document.getElementById('counterBarFill');
+      
+      counterNumber.textContent = `${status.count}/${status.limit}`;
+      const percentage = (status.count / status.limit) * 100;
+      counterBarFill.style.width = percentage + '%';
+      
+      // Cambiar color si está cerca del límite
+      if (status.remaining <= 3) {
+        counterBarFill.classList.add('warning');
+        counterNumber.style.color = '#ef4444';
+      } else {
+        counterBarFill.classList.remove('warning');
+        counterNumber.style.color = 'var(--gold)';
       }
       
       banner.style.display = 'block';
