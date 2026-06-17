@@ -1,7 +1,7 @@
 # 📊 Estado Actual del Proyecto Luminom IA
 
 **Última actualización:** 17 de junio de 2026  
-**Commit actual:** `43461f3` - 🔧 Fix Firestore index requirement
+**Commit actual:** `cff2d41` - 💎 Implement premium payment system and free plan restrictions
 
 ---
 
@@ -41,12 +41,20 @@
 ### 3. 💳 Sistema de Pagos con Wompi
 - ✅ Integración de Wompi checkout widget
 - ✅ **3 planes de suscripción:**
-  - **Estudiante:** Gratis (limitado)
+  - **Estudiante:** Gratis (10 preguntas/día)
   - **Premium:** $14,900 COP/mes (acceso completo)
   - **De por Vida:** $299,000 COP pago único ⭐ MEJOR VALOR
+- ✅ **Persistencia de suscripción en Firestore** (NUEVO)
+- ✅ **Sistema de restricciones para plan gratis** (NUEVO):
+  - Límite de 10 preguntas por día
+  - Banner informativo con contador de preguntas restantes
+  - Modal de bloqueo cuando se alcanza el límite
+  - Reset automático cada día
+- ✅ **Badge de plan en navegación** (NUEVO):
+  - 📝 Gratis / ⭐ Premium / 👑 De por Vida
 - ✅ Página de confirmación de pago (`payment-success.html`)
 - ✅ Modo de pruebas activado (pub_test_V5V6qvtEEibQdDt5C1xYs0lQvmKYN2HH)
-- ✅ Documentación: `WOMPI_SETUP.md`
+- ✅ Documentación completa: `WOMPI_SETUP.md`, `SISTEMA_PAGOS_PREMIUM.md`
 
 ### 4. 🤖 Tutor con IA (Groq API)
 - ✅ Chat inteligente con modelo Llama 3.1 70B
