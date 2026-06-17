@@ -187,7 +187,7 @@
           <li>Soporte prioritario 24/7</li>
           <li>Acceso anticipado a nuevas funciones</li>
         </ul>
-        <button class="btn btn-primary" disabled>Próximamente</button>
+        <button class="btn btn-primary" onclick="subscribeToPremium()">Suscribirme Ahora</button>
       </div>
 
       <!-- Plan Institucional -->
@@ -309,3 +309,87 @@
 
 </body>
 </html>
+
+
+
+  <script>
+    // Sistema de pagos con Wompi (Pasarela colombiana)
+    function subscribeToPremium() {
+      // Verificar si está logueado
+      const session = JSON.parse(localStorage.getItem('luminom_session') || 'null');
+      
+      if (!session) {
+        alert('⚠️ Debes iniciar sesión primero');
+        window.location.href = 'login.html?next=servicios';
+        return;
+      }
+      
+      // Configuración de Wompi
+      const wompiConfig = {
+        publicKey: 'pub_test_V5V6qvtEEibQdDt5C1xYs0lQvmKYN2HH', // Key de prueba
+        currency: 'COP',
+        amountInCents: 1490000, // $14,900 COP
+        reference: `premium-${session.userId}-${Date.now()}`,
+        redirectUrl: window.location.origin + '/luminam-ia/payment-success.html'
+      };
+      
+      // Crear formulario de pago de Wompi
+      const checkout = new WidgetCheckout({
+        currency: wompiConfig.currency,
+        amountInCents: wompiConfig.amountInCents,
+        reference: wompiConfig.reference,
+        publicKey: wompiConfig.publicKey,
+        redirectUrl: wompiConfig.redirectUrl,
+        customerData: {
+          email: session.email,
+          fullName: session.name,
+          phoneNumber: '',
+        }
+      });
+      
+      checkout.open(function(result) {
+        const transaction = result.transaction;
+        console.log('Transacción:', transaction);
+        
+        if (transaction.status === 'APPROVED') {
+          // Guardar suscripción en localStorage
+          const subscription = {
+            plan: 'premium',
+            userId: session.userId,
+            transactionId: transaction.id,
+            startDate: new Date().toISOString(),
+            status: 'active'
+          };
+          
+          localStorage.setItem('luminom_subscription', JSON.stringify(subscription));
+          
+          alert('🎉 ¡Pago exitoso! Ahora eres Premium');
+          window.location.href = 'tutor.html';
+        } else {
+          alert('❌ Pago cancelado o rechazado');
+        }
+      });
+    }
+    
+    // Verificar si el usuario ya es Premium
+    function checkPremiumStatus() {
+      const subscription = JSON.parse(localStorage.getItem('luminom_subscription') || 'null');
+      
+      if (subscription && subscription.status === 'active') {
+        // Cambiar botón para usuarios Premium
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+          if (btn.textContent.includes('Suscribirme')) {
+            btn.textContent = '✅ Ya eres Premium';
+            btn.disabled = true;
+            btn.onclick = null;
+          }
+        });
+      }
+    }
+    
+    // Ejecutar al cargar la página
+    window.addEventListener('DOMContentLoaded', checkPremiumStatus);
+  </script>
+  
+  <!-- Wompi Checkout Script -->
+  <script src="https://checkout.wompi.co/widget.js"></script>
