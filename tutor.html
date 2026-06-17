@@ -121,14 +121,14 @@
         <div class="nav-user">
           <span class="nav-user-name" id="userName">Cargando...</span>
         </div>
-        <button class="btn-nav" onclick="Auth.logout()">Salir</button>
+        <button class="btn-nav" id="logoutBtn">Salir</button>
       </div>
     </div>
   </nav>
 
   <div class="chat-layout">
     <aside class="sidebar">
-      <button class="sidebar-btn" onclick="newChat()">+ Nueva conversación</button>
+      <button class="sidebar-btn" id="newChatBtn">+ Nueva conversación</button>
       <h3>Historial</h3>
       <div id="historyList">
         <div class="history-item">Sin conversaciones previas</div>
@@ -141,19 +141,19 @@
           <h2>Hola, <span class="gold" id="welcomeName">estudiante</span> 👋</h2>
           <p>Soy tu tutor con IA. Puedo ayudarte con cualquier materia universitaria. Elige un tema o escribe tu pregunta:</p>
           <div class="quick-grid">
-            <div class="quick-card" onclick="sendQuick('Explícame derivadas con un ejemplo paso a paso')">
+            <div class="quick-card" data-quick-prompt="Explícame derivadas con un ejemplo paso a paso">
               <span class="quick-icon">∫</span>
               <div class="quick-title">Cálculo</div>
             </div>
-            <div class="quick-card" onclick="sendQuick('¿Cómo funciona un bucle for en Python?')">
+            <div class="quick-card" data-quick-prompt="¿Cómo funciona un bucle for en Python?">
               <span class="quick-icon">💻</span>
               <div class="quick-title">Programación</div>
             </div>
-            <div class="quick-card" onclick="sendQuick('Explica la Segunda Ley de Newton')">
+            <div class="quick-card" data-quick-prompt="Explica la Segunda Ley de Newton">
               <span class="quick-icon">⚛</span>
               <div class="quick-title">Física</div>
             </div>
-            <div class="quick-card" onclick="sendQuick('¿Qué es oferta y demanda?')">
+            <div class="quick-card" data-quick-prompt="¿Qué es oferta y demanda?">
               <span class="quick-icon">📊</span>
               <div class="quick-title">Economía</div>
             </div>
@@ -166,19 +166,20 @@
           <textarea 
             id="userInput" 
             placeholder="Escribe tu pregunta aquí..."
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"
             rows="1"
           ></textarea>
-          <button class="btn-send" onclick="sendMessage()" id="sendBtn">Enviar</button>
+          <button class="btn-send" id="sendBtn">Enviar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+  <script>
     // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDzS5dYHznoTUsYYxWxfcA5JAHPMOJkSMA",
@@ -190,8 +191,9 @@
     };
 
     // Inicializar Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     console.log('✅ Firebase inicializado correctamente');
 
@@ -446,19 +448,19 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
           <h2>Hola, <span class="gold" id="welcomeName">${session.name}</span> 👋</h2>
           <p>Soy tu tutor con IA. Puedo ayudarte con cualquier materia universitaria. Elige un tema o escribe tu pregunta:</p>
           <div class="quick-grid">
-            <div class="quick-card" onclick="sendQuick('Explícame derivadas con un ejemplo paso a paso')">
+            <div class="quick-card" data-quick-prompt="Explícame derivadas con un ejemplo paso a paso">
               <span class="quick-icon">∫</span>
               <div class="quick-title">Cálculo</div>
             </div>
-            <div class="quick-card" onclick="sendQuick('¿Cómo funciona un bucle for en Python?')">
+            <div class="quick-card" data-quick-prompt="¿Cómo funciona un bucle for en Python?">
               <span class="quick-icon">💻</span>
               <div class="quick-title">Programación</div>
             </div>
-            <div class="quick-card" onclick="sendQuick('Explica la Segunda Ley de Newton')">
+            <div class="quick-card" data-quick-prompt="Explica la Segunda Ley de Newton">
               <span class="quick-icon">⚛</span>
               <div class="quick-title">Física</div>
             </div>
-            <div class="quick-card" onclick="sendQuick('¿Qué es oferta y demanda?')">
+            <div class="quick-card" data-quick-prompt="¿Qué es oferta y demanda?">
               <span class="quick-icon">📊</span>
               <div class="quick-title">Economía</div>
             </div>
@@ -487,15 +489,14 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       try {
         if (currentChatId) {
           // Actualizar chat existente en Firebase
-          const chatRef = doc(db, 'chats', currentChatId);
-          await updateDoc(chatRef, {
+          await db.collection('chats').doc(currentChatId).update({
             title,
             messages: conversationHistory,
             updatedAt: new Date().toISOString()
           });
         } else {
           // Crear nuevo chat en Firebase
-          const docRef = await addDoc(collection(db, 'chats'), {
+          const docRef = await db.collection('chats').add({
             userId: session.userId,
             title,
             messages: conversationHistory,
@@ -547,16 +548,13 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       
       try {
         // Cargar desde Firebase
-        const q = query(
-          collection(db, 'chats'), 
-          where('userId', '==', session.userId),
-          orderBy('updatedAt', 'desc')
-        );
+        const snapshot = await db.collection('chats')
+          .where('userId', '==', session.userId)
+          .orderBy('updatedAt', 'desc')
+          .get();
         
-        const querySnapshot = await getDocs(q);
         const userChats = [];
-        
-        querySnapshot.forEach((doc) => {
+        snapshot.forEach((doc) => {
           userChats.push({
             id: doc.id,
             ...doc.data()
@@ -606,10 +604,10 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
     async function loadChat(chatId) {
       try {
         // Cargar desde Firebase
-        const chatDoc = await getDocs(query(collection(db, 'chats'), where('__name__', '==', chatId)));
+        const chatDoc = await db.collection('chats').doc(chatId).get();
         
-        if (!chatDoc.empty) {
-          const chatData = chatDoc.docs[0].data();
+        if (chatDoc.exists) {
+          const chatData = chatDoc.data();
           currentChatId = chatId;
           conversationHistory = chatData.messages;
           
@@ -645,7 +643,7 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       
       try {
         // Eliminar de Firebase
-        await deleteDoc(doc(db, 'chats', chatId));
+        await db.collection('chats').doc(chatId).delete();
         
         if (currentChatId === chatId) {
           newChat();
@@ -667,9 +665,34 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       }
     }
 
-    // Hacer funciones globales
+    // Hacer funciones globales para onclick
     window.loadChat = loadChat;
     window.deleteChat = deleteChat;
+    window.sendQuick = sendQuick;
+
+    // Event listeners (en lugar de onclick en HTML)
+    document.getElementById('logoutBtn').addEventListener('click', () => Auth.logout());
+    document.getElementById('newChatBtn').addEventListener('click', newChat);
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    
+    // Enter para enviar
+    document.getElementById('userInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Event delegation para quick cards (funcionan incluso cuando se recrean)
+    document.getElementById('messages').addEventListener('click', (e) => {
+      const quickCard = e.target.closest('.quick-card');
+      if (quickCard) {
+        const prompt = quickCard.getAttribute('data-quick-prompt');
+        if (prompt) {
+          sendQuick(prompt);
+        }
+      }
+    });
 
     // Auto-resize textarea
     document.getElementById('userInput').addEventListener('input', function() {

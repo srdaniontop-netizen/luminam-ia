@@ -307,10 +307,8 @@
     <p style="margin-top:0.5rem;color:#64748B;">Hecho con ❤️ para estudiantes colombianos 🇨🇴</p>
   </footer>
 
-</body>
-</html>
-
-
+  <!-- Wompi Checkout Script -->
+  <script src="https://checkout.wompi.co/widget.js"></script>
 
   <script>
     // Sistema de pagos con Wompi (Pasarela colombiana)
@@ -371,7 +369,7 @@
       });
     }
     
-    // Hacer función global
+    // Hacer función global para onclick
     window.subscribeToPremium = subscribeToPremium;
     
     // Verificar si el usuario ya es Premium
@@ -393,6 +391,6 @@
     // Ejecutar al cargar la página
     window.addEventListener('DOMContentLoaded', checkPremiumStatus);
   </script>
-  
-  <!-- Wompi Checkout Script -->
-  <script src="https://checkout.wompi.co/widget.js"></script>
+
+</body>
+</html>
