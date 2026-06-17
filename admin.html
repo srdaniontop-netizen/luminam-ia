@@ -163,16 +163,23 @@
     // Cargar datos
     async function loadData() {
       try {
+        console.log('📊 Cargando datos del panel de admin...');
+        console.log('Usuario admin:', session);
+        
         // Obtener todos los usuarios
+        console.log('🔵 Cargando usuarios...');
         const usersSnapshot = await db.collection('users').get();
         const users = [];
         usersSnapshot.forEach(doc => {
           users.push({ id: doc.id, ...doc.data() });
         });
+        console.log(`✅ Cargados ${users.length} usuarios`);
 
         // Obtener todos los chats
+        console.log('🔵 Cargando chats...');
         const chatsSnapshot = await db.collection('chats').get();
         const totalChats = chatsSnapshot.size;
+        console.log(`✅ Cargados ${totalChats} chats`);
 
         // Calcular estadísticas
         let premiumCount = 0;
@@ -188,6 +195,13 @@
           }
         });
 
+        console.log('📈 Estadísticas:', {
+          total: users.length,
+          premium: premiumCount,
+          lifetime: lifetimeCount,
+          chats: totalChats
+        });
+
         // Actualizar estadísticas
         document.getElementById('totalUsers').textContent = users.length;
         document.getElementById('premiumUsers').textContent = premiumCount;
@@ -198,8 +212,26 @@
         displayUsers(users);
 
       } catch (error) {
-        console.error('Error al cargar datos:', error);
-        document.getElementById('usersLoading').innerHTML = '❌ Error al cargar datos';
+        console.error('❌ Error al cargar datos:', error);
+        console.error('Código de error:', error.code);
+        console.error('Mensaje:', error.message);
+        
+        let errorMsg = '❌ Error al cargar datos: ' + error.message;
+        
+        if (error.code === 'permission-denied') {
+          errorMsg = `
+            ❌ <strong>Error de Permisos</strong><br><br>
+            Las reglas de Firestore no permiten al admin leer los datos.<br><br>
+            <strong>Solución:</strong><br>
+            1. Ir a <a href="https://console.firebase.google.com/project/luminom-ia/firestore/rules" target="_blank">Firebase Console → Firestore → Reglas</a><br>
+            2. Copiar las reglas del archivo <code>firestore.rules</code> del proyecto<br>
+            3. Publicar las reglas<br>
+            4. Esperar 1 minuto y recargar esta página<br><br>
+            <strong>Email de admin requerido:</strong> admin@luminom.com
+          `;
+        }
+        
+        document.getElementById('usersLoading').innerHTML = errorMsg;
       }
     }
 
