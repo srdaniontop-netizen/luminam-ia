@@ -199,19 +199,29 @@
     document.getElementById('userName').textContent = session.name;
     document.getElementById('welcomeName').textContent = session.name;
 
-    // Configuración de API
+    // Configuración de API (Key configurada automáticamente)
     const API_CONFIG = {
       url: 'https://api.groq.com/openai/v1/chat/completions',
+      // La API Key se configura automáticamente al primer uso
       key: localStorage.getItem('groq_api_key') || '',
       model: 'llama-3.3-70b-versatile'
     };
 
     let conversationHistory = [];
+    let currentChatId = null;
 
-    // Verificar API Key al cargar
+    // Auto-configurar API Key si no existe (solo primera vez)
     window.addEventListener('DOMContentLoaded', () => {
       if (!API_CONFIG.key) {
-        setTimeout(showApiKeyPrompt, 500);
+        // Configuración automática de la API Key
+        const defaultKey = prompt('🔑 CONFIGURACIÓN INICIAL\n\nPor favor, pega tu API Key de Groq (solo una vez):\n\nSi no tienes una, créala gratis en console.groq.com');
+        if (defaultKey && defaultKey.startsWith('gsk_')) {
+          localStorage.setItem('groq_api_key', defaultKey);
+          API_CONFIG.key = defaultKey;
+          alert('✅ API Key configurada correctamente');
+        }
+      } else {
+        API_CONFIG.key = localStorage.getItem('groq_api_key');
       }
     });
 
@@ -402,7 +412,7 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       if (!message) return;
       
       if (!API_CONFIG.key) {
-        showApiKeyPrompt();
+        alert('⚠️ Error: No hay API Key configurada. Contacta al administrador.');
         return;
       }
       
@@ -425,6 +435,14 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       
       conversationHistory.push({ role: 'assistant', content: aiResponse });
       
+      // Guardar chat automáticamente
+      saveCurrentChat();
+      
+      // Registrar estadística
+      const stats = JSON.parse(localStorage.getItem('luminom_stats') || '{"totalQuestions":0,"totalConversations":0}');
+      stats.totalQuestions = (stats.totalQuestions || 0) + 1;
+      localStorage.setItem('luminom_stats', JSON.stringify(stats));
+      
       if (conversationHistory.length > 20) {
         conversationHistory = conversationHistory.slice(-20);
       }
@@ -434,39 +452,131 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       input.focus();
     }
 
+    function newChat() {
+      if (conversationHistory.length > 0) {
+        saveCurrentChat();
+      }
+      
+      conversationHistory = [];
+      currentChatId = null;
+      
+      document.getElementById('messages').innerHTML = `
+        <div class="welcome" id="welcome">
+          <h2>Hola, <span class="gold" id="welcomeName">${session.name}</span> 👋</h2>
+          <p>Soy tu tutor con IA. Puedo ayudarte con cualquier materia universitaria. Elige un tema o escribe tu pregunta:</p>
+          <div class="quick-grid">
+            <div class="quick-card" onclick="sendQuick('Explícame derivadas con un ejemplo paso a paso')">
+              <span class="quick-icon">∫</span>
+              <div class="quick-title">Cálculo</div>
+            </div>
+            <div class="quick-card" onclick="sendQuick('¿Cómo funciona un bucle for en Python?')">
+              <span class="quick-icon">💻</span>
+              <div class="quick-title">Programación</div>
+            </div>
+            <div class="quick-card" onclick="sendQuick('Explica la Segunda Ley de Newton')">
+              <span class="quick-icon">⚛</span>
+              <div class="quick-title">Física</div>
+            </div>
+            <div class="quick-card" onclick="sendQuick('¿Qué es oferta y demanda?')">
+              <span class="quick-icon">📊</span>
+              <div class="quick-title">Economía</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      loadChatHistory();
+      document.getElementById('userInput').focus();
+    }
+
+    // Cargar historial al iniciar
+    loadChatHistory();
+
     function sendQuick(question) {
       document.getElementById('userInput').value = question;
       sendMessage();
     }
 
-    function newChat() {
-      if (confirm('¿Iniciar nueva conversación? Se perderá el historial actual.')) {
-        conversationHistory = [];
-        document.getElementById('messages').innerHTML = `
-          <div class="welcome" id="welcome">
-            <h2>Hola, <span class="gold" id="welcomeName">${session.name}</span> 👋</h2>
-            <p>Soy tu tutor con IA. Puedo ayudarte con cualquier materia universitaria. Elige un tema o escribe tu pregunta:</p>
-            <div class="quick-grid">
-              <div class="quick-card" onclick="sendQuick('Explícame derivadas con un ejemplo paso a paso')">
-                <span class="quick-icon">∫</span>
-                <div class="quick-title">Cálculo</div>
-              </div>
-              <div class="quick-card" onclick="sendQuick('¿Cómo funciona un bucle for en Python?')">
-                <span class="quick-icon">💻</span>
-                <div class="quick-title">Programación</div>
-              </div>
-              <div class="quick-card" onclick="sendQuick('Explica la Segunda Ley de Newton')">
-                <span class="quick-icon">⚛</span>
-                <div class="quick-title">Física</div>
-              </div>
-              <div class="quick-card" onclick="sendQuick('¿Qué es oferta y demanda?')">
-                <span class="quick-icon">📊</span>
-                <div class="quick-title">Economía</div>
-              </div>
-            </div>
-          </div>
-        `;
-        document.getElementById('userInput').focus();
+    function saveCurrentChat() {
+      if (conversationHistory.length === 0) return;
+      
+      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
+      const session = Auth.getSession();
+      
+      if (currentChatId) {
+        // Actualizar chat existente
+        const chatIndex = chats.findIndex(c => c.id === currentChatId);
+        if (chatIndex !== -1) {
+          chats[chatIndex].messages = conversationHistory;
+          chats[chatIndex].updatedAt = new Date().toISOString();
+          chats[chatIndex].title = conversationHistory[0]?.content.substring(0, 50) + '...';
+        }
+      } else {
+        // Crear nuevo chat
+        currentChatId = Date.now().toString();
+        chats.push({
+          id: currentChatId,
+          userId: session.userId,
+          title: conversationHistory[0]?.content.substring(0, 50) + '...',
+          messages: conversationHistory,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
+      localStorage.setItem('luminom_chats', JSON.stringify(chats));
+      loadChatHistory();
+    }
+
+    function loadChatHistory() {
+      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
+      const session = Auth.getSession();
+      const userChats = chats.filter(c => c.userId === session.userId).sort((a, b) => 
+        new Date(b.updatedAt) - new Date(a.updatedAt)
+      );
+      
+      const historyList = document.getElementById('historyList');
+      if (userChats.length === 0) {
+        historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
+        return;
+      }
+      
+      historyList.innerHTML = userChats.map(chat => `
+        <div class="history-item" onclick="loadChat('${chat.id}')">
+          <div style="font-weight:600;margin-bottom:0.2rem;color:var(--navy);">${chat.title}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</div>
+        </div>
+      `).join('');
+    }
+
+    function loadChat(chatId) {
+      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
+      const chat = chats.find(c => c.id === chatId);
+      
+      if (!chat) return;
+      
+      currentChatId = chatId;
+      conversationHistory = chat.messages;
+      
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = '';
+      
+      conversationHistory.forEach(msg => {
+        addMessage(msg.content, msg.role === 'user');
+      });
+    }
+
+    function deleteChat(chatId) {
+      if (!confirm('¿Eliminar esta conversación?')) return;
+      
+      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
+      const filtered = chats.filter(c => c.id !== chatId);
+      localStorage.setItem('luminom_chats', JSON.stringify(filtered));
+      
+      if (currentChatId === chatId) {
+        newChat();
+      } else {
+        loadChatHistory();
       }
     }
 
