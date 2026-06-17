@@ -308,6 +308,38 @@
       document.querySelectorAll('.field-error').forEach(e => e.textContent = '');
     }
 
+    // Hacer funciones globales
+    window.showTab = showTab;
+    window.handleLogin = handleLogin;
+    window.handleRegister = handleRegister;
+
+    // Redirigir si ya está logueado
+    if (Auth.getSession()) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const next = urlParams.get('next') || 'tutor';
+      window.location.href = next + '.html';
+    }
+
+    // Detectar tab inicial
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab === 'register') {
+      document.querySelector('.tab.active').classList.remove('active');
+      document.querySelectorAll('.tab')[1].classList.add('active');
+      document.getElementById('loginForm').classList.remove('active');
+      document.getElementById('registerForm').classList.add('active');
+    }
+
+    function showTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+      document.getElementById(tabName + 'Form').classList.add('active');
+      
+      document.querySelectorAll('.field-error').forEach(e => e.textContent = '');
+    }
+
     async function handleLogin(event) {
       event.preventDefault();
       

@@ -371,6 +371,9 @@
       });
     }
     
+    // Hacer función global
+    window.subscribeToPremium = subscribeToPremium;
+    
     // Verificar si el usuario ya es Premium
     function checkPremiumStatus() {
       const subscription = JSON.parse(localStorage.getItem('luminom_subscription') || 'null');

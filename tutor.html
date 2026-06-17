@@ -205,6 +205,9 @@
       }
     };
 
+    // Hacer Auth global
+    window.Auth = Auth;
+
     // VERIFICAR AUTENTICACIÓN (OBLIGATORIA)
     if (!Auth.requireAuth()) {
       document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;">Redirigiendo...</div>';
