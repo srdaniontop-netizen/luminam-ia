@@ -176,10 +176,6 @@
   </div>
 
   <script>
-    // Configuración de API
-    const API_URL = window.location.hostname === 'localhost' 
-      ? 'http://localhost:3000/api' 
-      : 'https://luminam-ia.vercel.app/api';
 
     // Sistema de Autenticación
     const Auth = {
@@ -464,108 +460,83 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
     function saveCurrentChat() {
       if (conversationHistory.length === 0) return;
       
+      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
       const session = Auth.getSession();
-      const title = conversationHistory[0]?.content.substring(0, 50) + '...';
       
-      // Guardar en la base de datos
-      saveChatToDatabase(session.userId, currentChatId, title, conversationHistory);
-    }
-
-    async function saveChatToDatabase(userId, chatId, title, messages) {
-      try {
-        const response = await fetch(`${API_URL}/chats/save`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, chatId, title, messages })
+      if (currentChatId) {
+        // Actualizar chat existente
+        const chatIndex = chats.findIndex(c => c.id === currentChatId);
+        if (chatIndex !== -1) {
+          chats[chatIndex].messages = conversationHistory;
+          chats[chatIndex].updatedAt = new Date().toISOString();
+          chats[chatIndex].title = conversationHistory[0]?.content.substring(0, 50) + '...';
+        }
+      } else {
+        // Crear nuevo chat
+        currentChatId = Date.now().toString();
+        chats.push({
+          id: currentChatId,
+          userId: session.userId,
+          title: conversationHistory[0]?.content.substring(0, 50) + '...',
+          messages: conversationHistory,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         });
-
-        const data = await response.json();
-
-        if (response.ok && !currentChatId) {
-          currentChatId = data.chatId;
-        }
-
-        loadChatHistory();
-      } catch (error) {
-        console.error('Error al guardar chat:', error);
       }
-    }
-
-    async function loadChatHistory() {
-      const session = Auth.getSession();
       
-      try {
-        const response = await fetch(`${API_URL}/chats/list?userId=${session.userId}`);
-        const data = await response.json();
-
-        if (!response.ok || !data.chats) {
-          document.getElementById('historyList').innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
-          return;
-        }
-
-        const userChats = data.chats;
-        
-        const historyList = document.getElementById('historyList');
-        if (userChats.length === 0) {
-          historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
-          return;
-        }
-        
-        historyList.innerHTML = userChats.map(chat => `
-          <div class="history-item" onclick="loadChat('${chat.id}')">
-            <div style="font-weight:600;margin-bottom:0.2rem;color:var(--navy);">${chat.title}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted);">${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</div>
-          </div>
-        `).join('');
-      } catch (error) {
-        console.error('Error al cargar historial:', error);
-        document.getElementById('historyList').innerHTML = '<div class="history-item">Error al cargar historial</div>';
-      }
+      localStorage.setItem('luminom_chats', JSON.stringify(chats));
+      loadChatHistory();
     }
 
-    async function loadChat(chatId) {
+    function loadChatHistory() {
+      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
       const session = Auth.getSession();
+      const userChats = chats.filter(c => c.userId === session.userId).sort((a, b) => 
+        new Date(b.updatedAt) - new Date(a.updatedAt)
+      );
       
-      try {
-        const response = await fetch(`${API_URL}/chats/list?userId=${session.userId}`);
-        const data = await response.json();
-
-        if (!response.ok) return;
-
-        const chat = data.chats.find(c => c.id === chatId);
-        if (!chat) return;
-        
-        currentChatId = chatId;
-        conversationHistory = chat.messages;
-        
-        const messagesDiv = document.getElementById('messages');
-        messagesDiv.innerHTML = '';
-        
-        conversationHistory.forEach(msg => {
-          addMessage(msg.content, msg.role === 'user');
-        });
-      } catch (error) {
-        console.error('Error al cargar chat:', error);
+      const historyList = document.getElementById('historyList');
+      if (userChats.length === 0) {
+        historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
+        return;
       }
+      
+      historyList.innerHTML = userChats.map(chat => `
+        <div class="history-item" onclick="loadChat('${chat.id}')">
+          <div style="font-weight:600;margin-bottom:0.2rem;color:var(--navy);">${chat.title}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);">${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</div>
+        </div>
+      `).join('');
     }
 
-    async function deleteChat(chatId) {
+    function loadChat(chatId) {
+      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
+      const chat = chats.find(c => c.id === chatId);
+      
+      if (!chat) return;
+      
+      currentChatId = chatId;
+      conversationHistory = chat.messages;
+      
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = '';
+      
+      conversationHistory.forEach(msg => {
+        addMessage(msg.content, msg.role === 'user');
+      });
+    }
+
+    function deleteChat(chatId) {
       if (!confirm('¿Eliminar esta conversación?')) return;
       
-      const session = Auth.getSession();
+      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
+      const filtered = chats.filter(c => c.id !== chatId);
+      localStorage.setItem('luminom_chats', JSON.stringify(filtered));
       
-      try {
-        await fetch(`${API_URL}/chats/delete?chatId=${chatId}&userId=${session.userId}`, {
-          method: 'DELETE'
-        });
-
-        if (currentChatId === chatId) {
-          newChat();
-        } else {
-          loadChatHistory();
-        }
-      } catch (error) {
-        console.error('Error al eliminar chat:', error);
+      if (currentChatId === chatId) {
+        newChat();
+      } else {
+        loadChatHistory();
       }
     }
 

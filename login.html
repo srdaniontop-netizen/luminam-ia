@@ -160,76 +160,29 @@
 
 
   <script>
-    // Configuración de API
-    const API_URL = window.location.hostname === 'localhost' 
-      ? 'http://localhost:3000/api' 
-      : 'https://luminam-ia.vercel.app/api';
-
     const Auth = {
-      async register(name, email, password, carrera) {
-        try {
-          const response = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, carrera })
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            return { ok: false, error: data.error || 'Error al registrar' };
-          }
-
-          // Guardar sesión
-          localStorage.setItem('luminom_session', JSON.stringify(data.user));
-          return { ok: true, user: data.user };
-        } catch (error) {
-          console.error('Error en registro:', error);
-          return { ok: false, error: 'Error de conexión. Intenta de nuevo.' };
-        }
+      register(name, email, password, carrera) {
+        const users = this.getUsers();
+        if (users.find(u => u.email === email))
+          return { ok: false, error: 'Este correo ya está registrado.' };
+        const user = { id: Date.now().toString(), name, email, password, carrera, createdAt: new Date().toISOString() };
+        users.push(user);
+        localStorage.setItem('luminom_users', JSON.stringify(users));
+        return { ok: true, user };
       },
-
-      async login(email, password) {
-        try {
-          const response = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            return { ok: false, error: data.error || 'Error al iniciar sesión' };
-          }
-
-          // Guardar sesión
-          localStorage.setItem('luminom_session', JSON.stringify(data.user));
-          return { ok: true, user: data.user };
-        } catch (error) {
-          console.error('Error en login:', error);
-          return { ok: false, error: 'Error de conexión. Intenta de nuevo.' };
-        }
+      login(email, password) {
+        const users = this.getUsers();
+        const user = users.find(u => u.email === email && u.password === password);
+        if (!user) return { ok: false, error: 'Correo o contraseña incorrectos.' };
+        const session = { userId: user.id, name: user.name, email: user.email, carrera: user.carrera };
+        localStorage.setItem('luminom_session', JSON.stringify(session));
+        return { ok: true, user: session };
       },
-
-      logout() { 
-        localStorage.removeItem('luminom_session'); 
-        window.location.href = 'index.html'; 
-      },
-
-      getSession() { 
-        try { 
-          return JSON.parse(localStorage.getItem('luminom_session')); 
-        } catch { 
-          return null; 
-        } 
-      },
-
+      logout() { localStorage.removeItem('luminom_session'); window.location.href = 'index.html'; },
+      getSession() { try { return JSON.parse(localStorage.getItem('luminom_session')); } catch { return null; } },
+      getUsers() { try { return JSON.parse(localStorage.getItem('luminom_users') || '[]'); } catch { return []; } },
       requireAuth() {
-        if (!this.getSession()) { 
-          window.location.href = 'login.html?next=tutor'; 
-          return false; 
-        }
+        if (!this.getSession()) { window.location.href = 'login.html?next=tutor'; return false; }
         return true;
       }
     };
@@ -261,12 +214,11 @@
       document.querySelectorAll('.field-error').forEach(e => e.textContent = '');
     }
 
-    async function handleLogin(event) {
+    function handleLogin(event) {
       event.preventDefault();
       
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
-      const submitBtn = event.target.querySelector('.btn-submit');
       
       document.querySelectorAll('.field-error').forEach(e => e.textContent = '');
       
@@ -275,15 +227,10 @@
         return;
       }
       
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Iniciando sesión...';
-      
-      const result = await Auth.login(email, password);
+      const result = Auth.login(email, password);
       
       if (!result.ok) {
         document.getElementById('loginPasswordError').textContent = result.error;
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Entrar';
         return;
       }
       
@@ -292,7 +239,7 @@
       window.location.href = next + '.html';
     }
 
-    async function handleRegister(event) {
+    function handleRegister(event) {
       event.preventDefault();
       
       const name = document.getElementById('registerName').value.trim();
@@ -300,7 +247,6 @@
       const carrera = document.getElementById('registerCarrera').value;
       const password = document.getElementById('registerPassword').value;
       const confirmPassword = document.getElementById('registerConfirmPassword').value;
-      const submitBtn = event.target.querySelector('.btn-submit');
       
       document.querySelectorAll('.field-error').forEach(e => e.textContent = '');
       
@@ -329,18 +275,14 @@
         return;
       }
       
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Creando cuenta...';
-      
-      const result = await Auth.register(name, email, password, carrera);
+      const result = Auth.register(name, email, password, carrera);
       
       if (!result.ok) {
         document.getElementById('registerEmailError').textContent = result.error;
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Crear cuenta';
         return;
       }
       
+      Auth.login(email, password);
       window.location.href = 'tutor.html';
     }
   </script>
