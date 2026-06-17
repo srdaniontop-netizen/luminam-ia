@@ -178,21 +178,12 @@
 
 <p class="auth-footer">© 2024 Luminom IA · Jóvenes creaTIvos</p>
 
+<script src="/js/api.js"></script>
 <script>
-
-const Auth={
-  register(n,e,p,c){const u=this.getUsers();if(u.find(x=>x.email===e))return{ok:false,error:'Este correo ya está registrado.'};const nu={id:Date.now().toString(),name:n,email:e,password:p,carrera:c,createdAt:new Date().toISOString()};u.push(nu);localStorage.setItem('luminom_users',JSON.stringify(u));return{ok:true,user:nu};},
-  login(e,p){const u=this.getUsers();const user=u.find(x=>x.email===e&&x.password===p);if(!user)return{ok:false,error:'Correo o contraseña incorrectos.'};const s={userId:user.id,name:user.name,email:user.email,carrera:user.carrera};localStorage.setItem('luminom_session',JSON.stringify(s));return{ok:true,user:s};},
-  logout(){localStorage.removeItem('luminom_session');window.location.href='index.html';},
-  getSession(){try{return JSON.parse(localStorage.getItem('luminom_session'));}catch{return null;}},
-  getUsers(){try{return JSON.parse(localStorage.getItem('luminom_users')||'[]');}catch{return[];}},
-  requireAuth(){if(!this.getSession()){window.location.href='register.html?next=tutor';return false;}return true;},
-  redirectIfLogged(){if(this.getSession())window.location.href='tutor.html';}
-};
-
+const { Auth, Utils } = window.LuminomAPI;
 
 // Redirigir si ya tiene sesión
-Auth.redirectIfLogged();
+Utils.redirectIfAuthenticated();
 
 // Leer ?tab= o ?next= de la URL
 const params = new URLSearchParams(location.search);
@@ -244,19 +235,22 @@ function doLogin(){
   if(!v1||!v2) return;
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = 'Entrando...';
-  setTimeout(()=>{
-    const res = Auth.login(
-      document.getElementById('lEmail').value.trim(),
-      document.getElementById('lPass').value
-    );
-    if(res.ok){
-      showAlert('¡Bienvenido de nuevo, '+res.user.name+'! Redirigiendo...','ok');
-      setTimeout(()=>{ window.location.href = params.get('next')==='tutor' ? 'tutor.html' : 'tutor.html'; }, 900);
+  
+  Auth.login(
+    document.getElementById('lEmail').value.trim(),
+    document.getElementById('lPass').value
+  ).then(data => {
+    if(data.success){
+      showAlert('¡Bienvenido de nuevo! Redirigiendo...','ok');
+      setTimeout(()=>{ window.location.href = params.get('next') || 'tutor.html'; }, 900);
     } else {
-      showAlert(res.error);
+      showAlert(data.message || 'Error al iniciar sesión');
       btn.disabled=false; btn.textContent='Entrar al tutor →';
     }
-  }, 700);
+  }).catch(err => {
+    showAlert(err.message || 'Error de conexión');
+    btn.disabled=false; btn.textContent='Entrar al tutor →';
+  });
 }
 
 function doRegister(){
@@ -271,22 +265,24 @@ function doRegister(){
   if(!v1||!v2||!v3||!v4||!v5) return;
   const btn = document.getElementById('registerBtn');
   btn.disabled=true; btn.textContent='Creando cuenta...';
-  setTimeout(()=>{
-    const res = Auth.register(
-      document.getElementById('rName').value.trim(),
-      document.getElementById('rEmail').value.trim(),
-      p1,
-      document.getElementById('rCarrera').value
-    );
-    if(res.ok){
-      Auth.login(document.getElementById('rEmail').value.trim(), p1);
-      showAlert('¡Cuenta creada! Bienvenido, '+res.user.name+'. Redirigiendo...','ok');
+  
+  Auth.register(
+    document.getElementById('rName').value.trim(),
+    document.getElementById('rEmail').value.trim(),
+    p1,
+    document.getElementById('rCarrera').value
+  ).then(data => {
+    if(data.success){
+      showAlert('¡Cuenta creada! Bienvenido. Redirigiendo...','ok');
       setTimeout(()=>{ window.location.href='tutor.html'; }, 900);
     } else {
-      showAlert(res.error);
+      showAlert(data.message || 'Error al crear la cuenta');
       btn.disabled=false; btn.textContent='Crear cuenta gratis →';
     }
-  }, 700);
+  }).catch(err => {
+    showAlert(err.message || 'Error de conexión');
+    btn.disabled=false; btn.textContent='Crear cuenta gratis →';
+  });
 }
 
 // Enter key

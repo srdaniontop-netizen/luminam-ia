@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Luminom IA — Tutor Universitario</title>
+  <title>Luminom IA — Tutor Universitario Inteligente 2026</title>
+  <meta name="description" content="Tutor universitario con inteligencia artificial para estudiantes colombianos. Luminom IA te ayuda 24/7 con todas tus materias."/>
   <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
 
@@ -317,35 +318,9 @@
   </div>
 </footer>
 
+<script src="/js/api.js"></script>
 <script>
-
-const Auth = {
-  register(name, email, password, carrera) {
-    const users = this.getUsers();
-    if (users.find(u => u.email === email))
-      return { ok: false, error: 'Este correo ya está registrado.' };
-    const user = { id: Date.now().toString(), name, email, password, carrera, createdAt: new Date().toISOString() };
-    users.push(user);
-    localStorage.setItem('luminom_users', JSON.stringify(users));
-    return { ok: true, user };
-  },
-  login(email, password) {
-    const users = this.getUsers();
-    const user = users.find(u => u.email === email && u.password === password);
-    if (!user) return { ok: false, error: 'Correo o contraseña incorrectos.' };
-    const session = { userId: user.id, name: user.name, email: user.email, carrera: user.carrera };
-    localStorage.setItem('luminom_session', JSON.stringify(session));
-    return { ok: true, user: session };
-  },
-  logout() { localStorage.removeItem('luminom_session'); window.location.href = 'index.html'; },
-  getSession() { try { return JSON.parse(localStorage.getItem('luminom_session')); } catch { return null; } },
-  getUsers() { try { return JSON.parse(localStorage.getItem('luminom_users') || '[]'); } catch { return []; } },
-  requireAuth() {
-    if (!this.getSession()) { window.location.href = 'register.html?next=tutor'; return false; }
-    return true;
-  },
-  redirectIfLogged() { if (this.getSession()) window.location.href = 'tutor.html'; }
-};
+const { Auth, Utils } = window.LuminomAPI;
 
 // Nav scroll
 const nav = document.getElementById('nav');
@@ -359,7 +334,7 @@ document.getElementById('navDyn').innerHTML = ses
   ? `<a href="tutor.html" class="nav-link" style="color:var(--gold)">Mi tutor ✦</a>`
   : `<a href="register.html" class="nav-link">Iniciar sesión</a>`;
 document.getElementById('navDyn2').innerHTML = ses
-  ? `<button class="nav-logout" onclick="Auth.logout()">Salir</button>`
+  ? `<button class="nav-logout" onclick="window.LuminomAPI.Auth.logout()">Salir</button>`
   : `<a href="register.html?tab=register" class="nav-link nav-cta">Registro gratis</a>`;
 
 // Reveal on scroll
