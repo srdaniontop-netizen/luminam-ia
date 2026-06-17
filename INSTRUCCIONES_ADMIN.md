@@ -1,217 +1,340 @@
-# 🔐 INSTRUCCIONES PARA ACCEDER AL PANEL ADMIN
+# 👑 Guía del Panel de Administración
 
-## ⚠️ IMPORTANTE: Crear Cuenta de Administrador
+## 🔐 Acceso al Panel
 
-Para acceder al panel admin, necesitas crear una cuenta con el email especial de administrador.
+**URL:** https://srdaniontop-netizen.github.io/luminam-ia/admin.html
 
-### Paso 1: Ir al Registro
+**Acceso restringido solo a:** `admin@luminom.com`
 
-Ve a: **https://srdaniontop-netizen.github.io/luminam-ia/login.html?tab=register**
+---
 
-### Paso 2: Registrarse con el Email Admin
+## 🎯 Cómo Acceder
 
-Completa el formulario con estos datos:
+### 1. Crear la Cuenta de Admin (Primera vez)
+
+1. Ir a: https://srdaniontop-netizen.github.io/luminam-ia/login.html?tab=register
+2. Llenar el formulario:
+   - **Nombre:** Admin Luminom (o el que quieras)
+   - **Email:** `admin@luminom.com` ⚠️ **DEBE ser exactamente este email**
+   - **Contraseña:** Tu contraseña segura
+   - **Carrera:** Administración (o cualquier otra)
+3. Click en "Crear cuenta"
+4. ✅ Listo - ahora puedes acceder al panel
+
+### 2. Acceder al Panel (Después de crear la cuenta)
+
+1. Iniciar sesión con `admin@luminom.com` en: https://srdaniontop-netizen.github.io/luminam-ia/login.html
+2. Ir directamente a: https://srdaniontop-netizen.github.io/luminam-ia/admin.html
+3. O escribir la URL en el navegador: `/admin.html`
+
+**Nota:** El enlace a admin NO está en el menú de navegación - solo se accede por URL directa.
+
+---
+
+## 📊 Funciones del Panel
+
+### 1️⃣ Estadísticas en Tiempo Real
+
+Al abrir el panel verás 4 tarjetas con:
 
 ```
-Nombre: Admin Luminom
-Email: admin@luminom.com  ← IMPORTANTE: Debe ser este email exacto
-Carrera: (cualquiera)
-Contraseña: [tu contraseña segura]
+👥 Usuarios Registrados: 15
+⭐ Usuarios Premium: 3
+👑 Usuarios De por Vida: 1
+💬 Conversaciones Totales: 127
 ```
 
-### Paso 3: Acceder al Panel Admin
-
-Después de registrarte, ve a:
-
-**https://srdaniontop-netizen.github.io/luminam-ia/admin.html**
+**Se actualizan automáticamente** cada vez que recargas la página.
 
 ---
 
-## 🔑 Credenciales Admin
+### 2️⃣ Tabla de Usuarios
 
-**Email Admin**: `admin@luminom.com`
+Muestra TODOS los usuarios registrados con:
 
-⚠️ **Nota**: Solo cuentas con este email exacto pueden acceder al panel admin.
-
----
-
-## 📊 Funcionalidades del Panel Admin
-
-### Estadísticas en Tiempo Real:
-- ✅ **Total de usuarios** registrados
-- ✅ **Conversaciones** creadas
-- ✅ **Preguntas respondidas** por la IA
-- ✅ **Usuarios activos** en las últimas 24h
-
-### Tablas de Datos:
-- ✅ **Lista completa de usuarios** con estado
-- ✅ **Últimas conversaciones** con detalles
-- ✅ **Distribución por carreras** con gráficos
-
-### Actualización Automática:
-- 🔄 Las estadísticas se actualizan cada 30 segundos
-- 📊 Datos tomados directamente del localStorage
+| Columna | Descripción |
+|---------|-------------|
+| **Nombre** | Nombre completo del usuario |
+| **Email** | Correo electrónico |
+| **Carrera** | Carrera que estudia |
+| **Plan** | Badge de plan actual (Gratis/Premium/Lifetime) |
+| **Fecha Registro** | Cuándo se registró |
+| **Acciones** | Botones para dar o quitar premium |
 
 ---
 
-## 🚫 Seguridad
+### 3️⃣ Dar Premium GRATIS a un Usuario
 
-### Protección Implementada:
+**Casos de uso:**
+- Promociones especiales
+- Influencers/Embajadores
+- Premios de concursos
+- Testing interno
+- Amigos/Familia
+
+**Pasos:**
+
+1. Buscar al usuario en la tabla
+2. El usuario debe tener badge "📝 Gratis"
+3. Click en uno de estos botones:
+   - **"Dar Premium"** → Plan mensual por 12 meses
+   - **"Dar Lifetime"** → Plan de por vida (para siempre)
+4. Confirmar en el modal que aparece
+5. ✅ ¡Listo! El usuario ahora tiene premium
+
+**Lo que pasa automáticamente:**
+- Se actualiza en Firebase Firestore
+- El usuario ve su badge cambiar a "⭐ Premium" o "👑 De por Vida"
+- Desaparece el límite de 10 preguntas/día
+- Puede usar el tutor ilimitadamente
+- Se sincroniza en todos sus dispositivos
+
+---
+
+### 4️⃣ Quitar Premium de un Usuario
+
+**Casos de uso:**
+- La promoción terminó
+- Comportamiento inadecuado
+- Terminó periodo de prueba
+
+**Pasos:**
+
+1. Buscar al usuario con badge "⭐ Premium" o "👑 De por Vida"
+2. Click en botón **"Quitar Premium"** (rojo)
+3. Confirmar en el modal
+4. ✅ El usuario vuelve al plan Gratis
+
+**Lo que pasa automáticamente:**
+- Se elimina la suscripción de Firebase
+- Badge vuelve a "📝 Gratis"
+- Límite de 10 preguntas/día se reactiva
+- Se sincroniza en todos sus dispositivos
+
+---
+
+## 🧪 Ejemplo de Uso Paso a Paso
+
+### Escenario: Darle Premium gratis a un influencer
+
+**Situación:** Un influencer universitario quiere probar Luminom IA para hacer review en Instagram.
+
+**Paso 1:** El influencer se registra normal:
+- Va a la página
+- Se registra con su email: `influencer@email.com`
+- Tiene plan Gratis (10 preguntas/día)
+
+**Paso 2:** Tú le das Premium gratis:
+1. Iniciar sesión como admin
+2. Ir a `admin.html`
+3. Buscar en la tabla: `influencer@email.com`
+4. Click en "Dar Lifetime" (para que tenga acceso ilimitado permanente)
+5. Confirmar
+
+**Paso 3:** El influencer ve el cambio:
+- Badge cambia a "👑 De por Vida"
+- Ya no tiene límite de preguntas
+- Puede hacer review del producto sin restricciones
+
+**Paso 4 (Opcional):** Si quieres quitarle el acceso después:
+- Click en "Quitar Premium"
+- Vuelve a plan Gratis
+
+---
+
+## 💡 Tips y Mejores Prácticas
+
+### ✅ Cuándo Dar Premium Gratis
+
+- **Influencers/Creadores de contenido** → Lifetime (para que hagan reviews)
+- **Beta testers** → Premium por 12 meses (para testing)
+- **Ganadores de concursos** → Lifetime (como premio)
+- **Amigos/Familia** → Lo que quieras 😊
+- **Embajadores universitarios** → Lifetime (para que promuevan)
+
+### ⚠️ Cuándo Quitar Premium
+
+- **Abuso del servicio** (spam, comportamiento inadecuado)
+- **Promoción temporal terminó** (ej: acceso por 1 mes)
+- **Usuario dejó de ser embajador**
+- **Testing interno terminó**
+
+### 🔒 Seguridad
+
+- **Solo `admin@luminom.com` puede acceder** al panel
+- Si alguien más intenta entrar → Alerta: "Acceso denegado"
+- Todos los cambios se registran en Firestore con timestamp
+- Campo `grantedBy: "admin@luminom.com"` para auditoría
+
+---
+
+## 📋 Registro de Cambios en Firestore
+
+Cuando das premium gratis, se guarda esto en Firebase:
 
 ```javascript
-// Solo permite acceso si el email es admin@luminom.com
-isAdmin() {
-  const session = this.getSession();
-  return session && session.email === 'admin@luminom.com';
+subscription: {
+  plan: "lifetime",                    // o "premium"
+  userId: "abc123",
+  transactionId: "admin-granted-1234", // Identificador único
+  startDate: "2026-06-17T...",
+  expiryDate: "never",                 // o fecha +12 meses
+  status: "active",
+  paymentMethod: "admin-gift",         // 🎁 Indica que fue regalo
+  grantedBy: "admin@luminom.com",      // Quién lo dio
+  grantedAt: "2026-06-17T..."          // Cuándo
 }
-
-// Verifica antes de mostrar el panel
-if (!Auth.isAdmin()) {
-  // Muestra "Acceso Denegado" y redirect a login
-}
 ```
 
-### ¿Qué pasa si alguien más intenta entrar?
-
-1. El sistema verifica el email de la sesión
-2. Si NO es `admin@luminom.com`, muestra:
-   - 🔒 "Acceso Denegado"
-   - Mensaje: "Esta página es solo para administradores"
-   - Botón para volver al login
+**Beneficio:** Puedes ver en Firebase Console quién dio premium y cuándo.
 
 ---
 
-## 🔄 Flujo Completo de Acceso
+## 🔍 Verificar que Funcionó
 
-```
-1. Crear cuenta con email admin@luminom.com
-   ↓
-2. Sistema detecta email especial
-   ↓
-3. Cuenta creada normalmente
-   ↓
-4. Login con esas credenciales
-   ↓
-5. Ir a /admin.html
-   ↓
-6. Sistema verifica: ¿email === admin@luminom.com?
-   ↓
-7. ✅ SI → Muestra panel admin
-   ❌ NO → "Acceso Denegado"
-```
+### Opción 1: En el Panel de Admin
+- Recargar la página
+- Buscar al usuario en la tabla
+- Verificar que el badge cambió
 
----
+### Opción 2: En Firebase Console
+1. Ir a: https://console.firebase.google.com/project/luminom-ia
+2. Firestore Database → Colección `users`
+3. Buscar el documento del usuario (por email)
+4. Verificar que existe campo `subscription` con `status: "active"`
 
-## 💾 Datos Mostrados
-
-Todos los datos son **REALES** tomados de localStorage:
-
-### `luminom_users`
-- Todos los usuarios registrados
-- Nombres, emails, carreras, fechas
-
-### `luminom_chats`
-- Todas las conversaciones
-- Títulos, mensajes, fechas de actualización
-
-### `luminom_stats`
-- Contadores globales
-- Preguntas totales, actividad
+### Opción 3: Preguntarle al Usuario
+- El usuario debe ver badge "⭐ Premium" o "👑 De por Vida" en la esquina superior derecha
+- El contador de preguntas debe desaparecer
+- Puede hacer preguntas ilimitadas sin bloqueo
 
 ---
 
-## 📧 Contacto
+## ❓ Preguntas Frecuentes
 
-Email de soporte: **luminomia@gmail.com**
+### ¿Cuántos usuarios puedo hacer premium gratis?
 
-Este email aparece en:
-- Footer del sitio
-- Página de contacto
-- Mensajes de error
+¡Los que quieras! No hay límite. Esto es útil para:
+- Promociones de lanzamiento
+- Programa de embajadores
+- Marketing con influencers
+
+### ¿El premium gratis expira?
+
+- **Plan Premium (botón "Dar Premium"):** Sí, expira en 12 meses
+- **Plan Lifetime (botón "Dar Lifetime"):** NO, es para siempre
+
+### ¿Puedo cambiar de Premium a Lifetime?
+
+Sí, simplemente:
+1. Click en "Quitar Premium" (para limpiar)
+2. Luego click en "Dar Lifetime"
+
+### ¿Se puede dar premium a mí mismo (admin)?
+
+¡Sí! Solo búscate en la tabla y date premium 😊
+
+### ¿Qué pasa si el usuario ya pagó?
+
+Si un usuario YA pagó (tiene `transactionId` de Wompi), aparecerá con badge Premium/Lifetime. Puedes quitárselo si quieres, pero **generalmente NO deberías** porque ya pagó.
+
+**Identificador:** Los pagos reales tienen `transactionId` que empieza con números Wompi. Los gratis tienen `admin-granted-...`
 
 ---
 
-## ⚙️ Configuración Técnica
+## 🚀 Casos de Uso Reales
 
-### Cambiar Email Admin
+### 1. Lanzamiento con Influencers
 
-Si quieres usar otro email de admin, edita `admin.html`:
+**Objetivo:** 10 influencers universitarios hagan review
+
+**Acción:**
+1. Crear lista de emails de los influencers
+2. Pedirles que se registren
+3. Darles a todos "Lifetime" gratis
+4. Ellos hacen contenido con acceso ilimitado
+
+### 2. Concurso en Redes Sociales
+
+**Objetivo:** "Gana 1 año de Premium gratis"
+
+**Acción:**
+1. Ganador se registra
+2. Darle "Premium" (expira en 12 meses)
+3. Anunciar ganador con screenshot del panel
+
+### 3. Programa de Embajadores
+
+**Objetivo:** 20 estudiantes promuevan en sus universidades
+
+**Acción:**
+1. Darles a todos "Lifetime"
+2. A cambio ellos traen nuevos usuarios
+3. Si dejan de ser embajadores → "Quitar Premium"
+
+---
+
+## 📝 Notas Técnicas
+
+### Diferencias: Premium vs Lifetime (Otorgado Gratis)
+
+| Característica | Premium (Gratis) | Lifetime (Gratis) |
+|----------------|------------------|-------------------|
+| Duración | 12 meses | Para siempre |
+| `expiryDate` | Fecha futura | `"never"` |
+| `transactionId` | `admin-granted-...` | `admin-granted-...` |
+| `paymentMethod` | `admin-gift` | `admin-gift` |
+
+### Permisos Requeridos
+
+El email `admin@luminom.com` debe:
+- ✅ Estar registrado en Firebase Authentication
+- ✅ Tener documento en Firestore `users/{userId}`
+- ✅ Firestore rules deben permitir lectura de todos los usuarios
+
+### Firestore Rules Necesarias
 
 ```javascript
-// Línea ~180 aprox
-isAdmin() {
-  const session = this.getSession();
-  return session && session.email === 'TU_EMAIL@AQUI.com'; // ← Cambiar
-}
-```
-
-### Agregar Múltiples Admins
-
-```javascript
-isAdmin() {
-  const session = this.getSession();
-  const adminEmails = [
-    'admin@luminom.com',
-    'admin2@luminom.com',
-    'otro@email.com'
-  ];
-  return session && adminEmails.includes(session.email);
+match /users/{userId} {
+  // Admin puede leer todos los usuarios
+  allow read: if request.auth.token.email == 'admin@luminom.com' 
+              || request.auth.uid == userId;
+  
+  // Admin puede actualizar cualquier usuario
+  allow update: if request.auth.token.email == 'admin@luminom.com' 
+                || request.auth.uid == userId;
 }
 ```
 
 ---
 
-## 🐛 Solución de Problemas
+## ✅ Checklist de Primera Vez
 
-### "Acceso Denegado" aunque soy admin
-
-**Causa**: Email no coincide exactamente
-
-**Solución**:
-1. Cierra sesión
-2. Regístrate de nuevo con `admin@luminom.com` (sin espacios, minúsculas)
-3. Inicia sesión
-4. Intenta acceder al admin
-
-### No veo estadísticas
-
-**Causa**: No hay datos en localStorage
-
-**Solución**:
-1. Crea algunos usuarios de prueba
-2. Haz conversaciones en el tutor
-3. Recarga el panel admin
-
-### Las estadísticas no se actualizan
-
-**Causa**: Datos antiguos en caché
-
-**Solución**:
-1. Abre DevTools (F12)
-2. Application → Local Storage
-3. Revisa los datos en `luminom_users`, `luminom_chats`, `luminom_stats`
-4. O recarga con Ctrl+Shift+R
+- [ ] Crear cuenta con email `admin@luminom.com`
+- [ ] Iniciar sesión como admin
+- [ ] Ir a `admin.html`
+- [ ] Verificar que ves las 4 tarjetas de estadísticas
+- [ ] Verificar que ves tabla de usuarios
+- [ ] Crear una cuenta de prueba normal
+- [ ] Darle Premium gratis a esa cuenta de prueba
+- [ ] Iniciar sesión con esa cuenta y verificar badge Premium
+- [ ] Quitar premium a la cuenta de prueba
+- [ ] Verificar que vuelve a plan Gratis
 
 ---
 
-## 🚀 Próximos Pasos
+## 🎉 ¡Todo Listo!
 
-Para mejorar el panel admin:
+Ahora puedes:
+- ✅ Ver todos tus usuarios
+- ✅ Dar premium gratis para promociones
+- ✅ Gestionar suscripciones manualmente
+- ✅ Monitorear estadísticas en tiempo real
 
-### Backend Real:
-- API REST para gestión de usuarios
-- Base de datos MongoDB/PostgreSQL
-- Autenticación con JWT
-- Roles y permisos granulares
+**URL del Panel:** https://srdaniontop-netizen.github.io/luminam-ia/admin.html
 
-### Funcionalidades Avanzadas:
-- Exportar datos a CSV/Excel
-- Filtros avanzados (fecha, carrera, actividad)
-- Ver conversaciones completas de usuarios
-- Banear/desbanear usuarios
-- Enviar notificaciones por email
-- Logs de acceso y auditoría
+**Email de Admin:** admin@luminom.com
 
 ---
 
-¡Listo! Ahora tienes un panel admin completamente funcional con acceso restringido.
+**¿Dudas?** Contacto: ialuminom@gmail.com
