@@ -171,6 +171,11 @@
   </div>
 
   <script>
+    // Configuración de API
+    const API_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000/api' 
+      : 'https://luminam-ia.vercel.app/api';
+
     // Sistema de autenticación del admin
     const Auth = {
       getSession() { try { return JSON.parse(localStorage.getItem('luminom_session')); } catch { return null; } },
@@ -204,46 +209,41 @@
       }
     }
 
-    // Cargar estadísticas reales
-    function loadStats() {
-      const users = JSON.parse(localStorage.getItem('luminom_users') || '[]');
-      const chats = JSON.parse(localStorage.getItem('luminom_chats') || '[]');
-      const stats = JSON.parse(localStorage.getItem('luminom_stats') || '{"totalQuestions":0}');
+    // Cargar estadísticas reales desde la API
+    async function loadStats() {
+      const session = Auth.getSession();
       
-      const today = new Date().toDateString();
-      const thisWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      
-      // Usuarios
-      document.getElementById('totalUsers').textContent = users.length;
-      const newUsersThisWeek = users.filter(u => new Date(u.createdAt) > thisWeek).length;
-      document.getElementById('usersChange').textContent = `+${newUsersThisWeek} esta semana`;
-      
-      // Conversaciones
-      document.getElementById('totalChats').textContent = chats.length;
-      const chatsToday = chats.filter(c => new Date(c.updatedAt).toDateString() === today).length;
-      document.getElementById('chatsChange').textContent = `+${chatsToday} hoy`;
-      
-      // Preguntas
-      const totalQuestions = stats.totalQuestions || chats.reduce((sum, chat) => 
-        sum + chat.messages.filter(m => m.role === 'user').length, 0
-      );
-      document.getElementById('totalQuestions').textContent = totalQuestions;
-      
-      // Usuarios activos (últimas 24h)
-      const activeToday = users.filter(u => {
-        const userChats = chats.filter(c => c.userId === u.id);
-        return userChats.some(c => new Date(c.updatedAt).toDateString() === today);
-      }).length;
-      document.getElementById('activeToday').textContent = activeToday;
-      
-      // Tabla de usuarios
-      loadUsersTable(users, chats);
-      
-      // Tabla de chats
-      loadChatsTable(chats, users);
-      
-      // Distribución de carreras
-      loadCarrerasChart(users);
+      try {
+        const response = await fetch(`${API_URL}/stats/admin?email=${encodeURIComponent(session.email)}`);
+        
+        if (!response.ok) {
+          console.error('Error al cargar estadísticas');
+          return;
+        }
+
+        const data = await response.json();
+        
+        // Actualizar estadísticas
+        document.getElementById('totalUsers').textContent = data.totalUsers;
+        document.getElementById('totalChats').textContent = data.totalChats;
+        document.getElementById('totalQuestions').textContent = data.totalQuestions;
+        document.getElementById('activeToday').textContent = data.activeUsers;
+        
+        // Simular cambios (esto puede mejorarse guardando datos históricos)
+        document.getElementById('usersChange').textContent = `Total registrados`;
+        document.getElementById('chatsChange').textContent = `Total conversaciones`;
+        
+        // Tabla de usuarios
+        loadUsersTable(data.users, data.recentChats);
+        
+        // Tabla de chats
+        loadChatsTable(data.recentChats, data.users);
+        
+        // Distribución de carreras
+        loadCarrerasChart(data.carrerasDistribution);
+      } catch (error) {
+        console.error('Error al cargar estadísticas:', error);
+      }
     }
 
     function loadUsersTable(users, chats) {
@@ -262,13 +262,83 @@
       }
       
       tbody.innerHTML = users.map(user => {
-        const userChats = chats.filter(c => c.userId === user.id);
-        const lastActivity = userChats.length > 0 
-          ? new Date(Math.max(...userChats.map(c => new Date(c.updatedAt))))
-          : new Date(user.createdAt);
+        const lastActivity = user.lastLogin ? new Date(user.lastLogin) : new Date(user.createdAt);
         const isActive = (Date.now() - lastActivity) < 24 * 60 * 60 * 1000;
         
         return `
+          <tr>
+            <td><strong>${user.name}</strong></td>
+            <td>${user.email}</td>
+            <td>${user.carrera}</td>
+            <td>${new Date(user.createdAt).toLocaleDateString('es-CO')}</td>
+            <td>${lastActivity.toLocaleDateString('es-CO')}</td>
+            <td><span class="badge ${isActive ? 'badge-success' : 'badge-warning'}">${isActive ? 'Activo' : 'Inactivo'}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function loadChatsTable(chats, users) {
+      const tbody = document.getElementById('chatsTable');
+      
+      if (chats.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-state">
+              <div class="empty-state-icon">💬</div>
+              <div>No hay conversaciones aún</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = chats.map(chat => {
+        const user = users.find(u => u.id === chat.userId);
+        const userName = user ? user.name : 'Usuario desconocido';
+        
+        return `
+          <tr>
+            <td><strong>${chat.title}</strong></td>
+            <td>${userName}</td>
+            <td>${chat.messagesCount} mensajes</td>
+            <td>${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function loadCarrerasChart(carrerasDistribution) {
+      const container = document.getElementById('carrerasChart');
+      
+      if (!carrerasDistribution || carrerasDistribution.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <div>No hay datos de carreras aún</div>
+          </div>
+        `;
+        return;
+      }
+      
+      const totalUsers = carrerasDistribution.reduce((sum, c) => sum + c.count, 0);
+      
+      container.innerHTML = carrerasDistribution.map(carrera => {
+        const percentage = ((carrera.count / totalUsers) * 100).toFixed(1);
+        
+        return `
+          <div style="margin-bottom:1.2rem;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+              <span style="font-weight:600;font-size:0.9rem;">${carrera._id || 'Sin especificar'}</span>
+              <span style="color:var(--text-muted);font-size:0.85rem;">${carrera.count} (${percentage}%)</span>
+            </div>
+            <div style="height:8px;background:var(--off-white);border-radius:100px;overflow:hidden;">
+              <div style="height:100%;background:var(--gold);width:${percentage}%;transition:width 0.6s ease;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
           <tr>
             <td><strong>${user.name}</strong></td>
             <td>${user.email}</td>
