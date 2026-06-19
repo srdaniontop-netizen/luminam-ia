@@ -1697,6 +1697,157 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
     }
       
       // ============================================
+      // VERIFICAR LÍMITE DE PREGUNTAS (PLAN GRATIS)
+      // ============================================
+      const status = canAskQuestion();
+      
+      if (!status.allowed) {
+        alert(`⚠️ Has alcanzado el límite de ${status.limit} preguntas diarias del plan gratuito.\n\n💎 Mejora a Premium para preguntas ilimitadas desde $14,900/mes o De por Vida por $299,000.\n\nVisita la página de Servicios para actualizar tu plan.`);
+        
+        // Abrir página de servicios
+        if (confirm('¿Quieres ver los planes disponibles?')) {
+          window.open('servicios.html', '_blank');
+        }
+        return;
+      }
+      
+      if (!API_CONFIG.key) {
+        alert('⚠️ Error: No hay API Key configurada. Contacta al administrador.');
+        return;
+      }
+      
+      input.value = '';
+      input.style.height = 'auto';
+      
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      
+      // Construir mensaje con contexto del archivo
+      let fullMessage = message;
+      
+      if (attachedFile) {
+        if (extractedFileContent) {
+          fullMessage = `He adjuntado el archivo "${attachedFile.name}" con el siguiente contenido:\n\n${extractedFileContent}\n\n---\n\nMi pregunta: ${message || 'Analiza este contenido y explícamelo'}`;
+        } else if (attachedFile.type.startsWith('image/')) {
+          fullMessage = `[Imagen adjunta: ${attachedFile.name}]\n\n${message || 'Analiza esta imagen'}\n\n(Nota: Descripción visual no disponible)`;
+        } else {
+          fullMessage = `[Archivo adjunto: ${attachedFile.name}]\n\n${message}`;
+        }
+        
+        removeFile();
+      }
+      
+      addMessage(message || '📎 Archivo adjunto', true);
+      conversationHistory.push({ role: 'user', content: fullMessage });
+      
+      showTyping();
+      
+      const aiResponse = await callGroqAPI(fullMessage);
+      
+      hideTyping();
+      addMessage(aiResponse, false);
+      
+      conversationHistory.push({ role: 'assistant', content: aiResponse });
+      
+      // ============================================
+      // INCREMENTAR CONTADOR DE PREGUNTAS
+      // ============================================
+      if (userPlan === 'free') {
+        incrementQuestionCount();
+      }
+      
+      // Guardar chat automáticamente
+      saveCurrentChat();
+      
+      // Registrar estadística
+      const stats = JSON.parse(localStorage.getItem('luminom_stats') || '{"totalQuestions":0,"totalConversations":0}');
+      stats.totalQuestions = (stats.totalQuestions || 0) + 1;
+      localStorage.setItem('luminom_stats', JSON.stringify(stats));
+      
+      // Verificar logros desbloqueados
+      if (typeof checkAndUnlockAchievements !== 'undefined') {
+        setTimeout(checkAndUnlockAchievements, 500);
+      }
+      
+      if (conversationHistory.length > 20) {
+        conversationHistory = conversationHistory.slice(-20);
+      }
+      
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    // ========================================
+    // EXPORTAR PDF, VOZ Y OTRAS FUNCIONES
+    // ========================================
+    
+    window.exportChatToPDF = function() {
+      if (conversationHistory.length === 0) {
+        alert('⚠️ No hay conversación para exportar.');
+        return;
+      }
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(20);
+        doc.text('Luminom IA', 20, 20);
+        doc.setFontSize(10);
+        doc.text(`${session.name} - ${new Date().toLocaleDateString('es-CO')}`, 20, 30);
+        
+        let yPos = 40;
+        doc.setFontSize(11);
+        
+        conversationHistory.forEach((msg) => {
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          const lines = doc.splitTextToSize((msg.role === 'user' ? 'Tú: ' : 'IA: ') + msg.content, 170);
+          doc.text(lines, 20, yPos);
+          yPos += lines.length * 5 + 5;
+        });
+        
+        doc.save(`luminom-${Date.now()}.pdf`);
+        alert('✅ Exportado exitosamente');
+      } catch (error) {
+        alert('⚠️ Error al exportar PDF.');
+      }
+    };
+    
+    window.toggleVoiceRecording = function() {
+      if (!recognition) {
+        alert('⚠️ Reconocimiento de voz no soportado.');
+        return;
+      }
+      
+      const btn = document.getElementById('voiceBtn2');
+      
+      if (isRecording) {
+        recognition.stop();
+        isRecording = false;
+        btn.textContent = '🎤 Grabar Voz';
+        btn.style.background = 'rgba(245,158,11,0.1)';
+      } else {
+        recognition.start();
+        isRecording = true;
+        btn.textContent = '⏹️ Detener';
+        btn.style.background = '#ef4444';
+      }
+    };
+
+    function newChat() {
+      if (conversationHistory.length > 0) {
+        saveCurrentChat();
+      }
+      
+      conversationHistory = [];
+      currentChatId = null;
+      
+      document.getElementById('messagesDiv').innerHTML = '';
+      document.getElementById('messagesDiv').style.display = 'none';
       document.getElementById('welcomeScreen').style.display = 'flex';
       
       loadChatHistory();
