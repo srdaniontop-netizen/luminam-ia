@@ -298,58 +298,120 @@
     }
     
     .history-item {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 0.9rem 1rem;
-      border-radius: 10px;
+<<<<<<< Updated upstream
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      padding: 0.6rem;
+      border-radius: 8px;
+      font-size: 0.76rem;
       cursor: pointer;
       transition: var(--transition);
-      margin-bottom: 0.65rem;
+      margin-bottom: 0.4rem;
     }
     
     .history-item:hover {
-      background: rgba(201,168,76,0.15);
-      border-color: var(--gold);
-      transform: translateX(4px);
-      box-shadow: 0 2px 8px rgba(201,168,76,0.2);
+      background: rgba(201,168,76,0.1);
+      border-color: var(--border-gold);
+    }
+    
+=======
+      background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.15));
+      border: 3px solid var(--gold);
+      padding: 1.2rem 1.1rem;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .history-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .history-item:hover::before {
+      opacity: 1;
+    }
+    
+    .history-item:hover {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      border-color: var(--white);
+      transform: translateY(-5px) scale(1.04);
+      box-shadow: 0 10px 35px rgba(201,168,76,0.6);
+    }
+    
+    .history-item:active {
+      transform: translateY(-3px) scale(1.02);
     }
     
     .history-title {
-      font-weight: 600;
-      margin-bottom: 0.45rem;
+      font-weight: 700;
+      margin-bottom: 0.7rem;
       color: var(--white);
-      font-size: 0.88rem;
-      line-height: 1.4;
+      font-size: 0.96rem;
+      line-height: 1.5;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .history-item:hover .history-title {
+      color: var(--navy);
+      text-shadow: none;
     }
     
     .history-date {
-      font-size: 0.74rem;
-      color: rgba(255,255,255,0.5);
+      font-size: 0.80rem;
+      color: rgba(255,255,255,0.85);
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.6rem;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .history-item:hover .history-date {
+      color: var(--navy);
     }
     
     .history-date::before {
-      content: '📅';
-      font-size: 0.8rem;
+      content: '🕒';
+      font-size: 1rem;
     }
     
     .history-empty {
       text-align: center;
-      padding: 2.5rem 1rem;
-      color: rgba(255,255,255,0.4);
-      font-size: 0.85rem;
-      line-height: 1.7;
+      padding: 4rem 1.5rem;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.92rem;
+      line-height: 1.9;
     }
     
     .history-empty-icon {
-      font-size: 3.5rem;
-      margin-bottom: 1rem;
-      opacity: 0.3;
+      font-size: 5rem;
+      margin-bottom: 1.8rem;
+      opacity: 0.5;
+      animation: floatAnimation 3.5s ease-in-out infinite;
+    }
+    
+    @keyframes floatAnimation {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-15px) rotate(5deg); }
     }
     
     /* === CHAT AREA === */
+>>>>>>> Stashed changes
     /* === CHAT AREA === */
     .chat-area {
       flex: 1;
@@ -699,9 +761,11 @@
         </div>
       </div>
 
-      <!-- History Section -->
-      <div class="sidebar-section" style="flex:1;overflow-y:auto;">
-        <div class="sidebar-label">HISTORIAL</div>
+      <!-- History Section - SUPER VISIBLE -->
+      <div class="sidebar-section history-section" style="flex:1;overflow-y:auto;padding:1rem;background:rgba(0,0,0,0.15);border-radius:10px;margin:0.5rem;">
+        <div class="sidebar-label" style="font-size:0.7rem;font-weight:700;color:var(--gold);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.15em;">
+          💬 MIS CONVERSACIONES
+        </div>
         <div id="historyList"></div>
       </div>
       
@@ -1107,23 +1171,15 @@
         const historyList = document.getElementById('historyList');
         
         if (chatHistory.length === 0) {
-          historyList.innerHTML = `
-            <div class="history-empty">
-              <div class="history-empty-icon">💬</div>
-              <div>Sin conversaciones guardadas</div>
-              <div style="font-size:0.75rem;margin-top:0.5rem;opacity:0.7;">Tus chats se guardarán automáticamente aquí</div>
-            </div>
-          `;
+          historyList.innerHTML = '<div style="color:rgba(255,255,255,0.4);text-align:center;font-size:0.75rem;">Sin historial</div>';
         } else {
           historyList.innerHTML = chatHistory.map(chat => {
             const date = new Date(chat.updatedAt);
-            const dateStr = date.toLocaleDateString('es-CO', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
-            const title = chat.title || 'Nueva conversación';
-            
+            const dateStr = date.toLocaleDateString('es-CO', {month: 'short', day: 'numeric'});
             return `
-              <div class="history-item" onclick="window.loadChat('${chat.id}')">
-                <div class="history-title">${title}</div>
-                <div class="history-date">${dateStr}</div>
+              <div class="history-item" onclick="loadChat('${chat.id}')">
+                <div style="font-weight:600;margin-bottom:0.2rem;">${chat.title}</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);">${dateStr}</div>
               </div>
             `;
           }).join('');
