@@ -4,17 +4,127 @@
 
 🔗 **Demo en vivo**: https://srdaniontop-netizen.github.io/luminam-ia/
 
+[![Estado](https://img.shields.io/badge/Estado-Producción-success)](https://srdaniontop-netizen.github.io/luminam-ia/)
+[![Licencia](https://img.shields.io/badge/Licencia-MIT-blue)](LICENSE)
+[![Firebase](https://img.shields.io/badge/Firebase-Ready-orange)](https://firebase.google.com/)
+[![PWA](https://img.shields.io/badge/PWA-Enabled-purple)](manifest.json)
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Página Principal
+![Landing Page](https://via.placeholder.com/800x450/0A1628/C9A84C?text=Landing+Page+-+Captura+tu+screenshot+aquí)
+*Página principal con diseño elegante y llamada a la acción*
+
+### 💬 Chat con IA
+![Tutor Chat](https://via.placeholder.com/800x450/0A1628/C9A84C?text=Tutor+Chat+-+Captura+tu+screenshot+aquí)
+*Interfaz de chat con el tutor IA, historial y estadísticas*
+
+### 📚 Generador de Planes de Estudio
+![Study Plans](https://via.placeholder.com/800x450/0A1628/C9A84C?text=Plan+de+Estudio+-+Captura+tu+screenshot+aquí)
+*Formulario para generar planes de estudio personalizados*
+
+### 👑 Panel de Administración
+![Admin Panel](https://via.placeholder.com/800x450/0A1628/C9A84C?text=Panel+Admin+-+Captura+tu+screenshot+aquí)
+*Dashboard con estadísticas y gestión de usuarios*
+
+### 🌙 Modo Oscuro
+![Dark Mode](https://via.placeholder.com/800x450/112240/E8C97A?text=Dark+Mode+-+Captura+tu+screenshot+aquí)
+*Tema oscuro que invierte colores preservando el dorado*
+
+> **Nota:** Reemplaza los placeholders con screenshots reales de tu aplicación
+
+---
+
+## 🏗️ Arquitectura del Sistema
+
+```mermaid
+graph TB
+    A[👤 Usuario] -->|HTTPS| B[GitHub Pages<br/>Frontend HTML/CSS/JS]
+    
+    B -->|Firebase SDK| C[🔥 Firebase]
+    B -->|API REST| D[🤖 Groq API<br/>Llama 3.3 70B]
+    B -->|API REST| E[💳 Wompi API<br/>Pagos]
+    B -->|Library| F[📄 PDF.js<br/>Extracción]
+    
+    C -->|Auth| G[(Firebase Auth<br/>Usuarios)]
+    C -->|Database| H[(Firestore<br/>NoSQL)]
+    
+    H --> I[users<br/>Collection]
+    H --> J[chats<br/>Collection]
+    
+    style B fill:#667eea,color:#fff
+    style C fill:#FFA000,color:#fff
+    style D fill:#10B981,color:#fff
+    style E fill:#EC4899,color:#fff
+    style F fill:#8B5CF6,color:#fff
+```
+
+### Flujo de Datos
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant FB as Firebase
+    participant G as Groq API
+    
+    U->>F: 1. Hacer pregunta
+    F->>F: 2. Verificar límite diario
+    F->>G: 3. Enviar pregunta + contexto
+    G->>G: 4. Procesar con IA
+    G->>F: 5. Respuesta generada
+    F->>FB: 6. Guardar conversación
+    FB->>F: 7. Confirmación
+    F->>U: 8. Mostrar respuesta
+```
+
 ---
 
 ## ✨ Características Principales
 
+### Core Features
 - 🎯 **Adaptado a ti**: Respuestas personalizadas según tu carrera
 - ⚡ **Disponible 24/7**: A cualquier hora, sin esperas
 - 📚 **50+ Materias**: Desde cálculo hasta derecho constitucional
-- 🔒 **Sistema de autenticación**: Registro obligatorio para acceder al tutor
 - 💬 **Conversación natural**: Pregunta como hablarías con un compañero
 - 🇨🇴 **Contexto colombiano**: Ejemplos locales y explicaciones claras
-- 🎨 **Diseño elegante**: Tipografía Playfair Display + Inter
+
+### New Features ✨
+- 🌙 **Modo Oscuro**: Tema claro/oscuro con un click
+- 📄 **Exportar a PDF**: Descarga tus conversaciones
+- 🎤 **Entrada por Voz**: Habla en lugar de escribir
+- 📱 **PWA**: Instalable como app en tu móvil
+- 📊 **Estadísticas**: Tracking de preguntas y racha diaria
+- 📎 **Subir Archivos**: Adjunta PDFs e imágenes para análisis
+- 📚 **Planes de Estudio**: Generador IA de cronogramas personalizados
+
+---
+
+## 🚀 Stack Tecnológico (Full Stack)
+
+### Frontend
+- **HTML5**: Estructura semántica
+- **CSS3**: Variables CSS, animaciones, grid/flexbox
+- **JavaScript ES6+**: Async/await, modules, DOM manipulation
+
+### Backend (BaaS)
+- **Firebase Authentication**: Gestión de usuarios
+- **Firestore**: Base de datos NoSQL en tiempo real
+- **Security Rules**: Autorización a nivel de base de datos
+
+### APIs Externas
+- **Groq API**: Procesamiento de lenguaje natural (Llama 3.3 70B)
+- **Wompi API**: Gateway de pagos colombiano
+- **PDF.js**: Extracción de texto de documentos
+- **Web Speech API**: Reconocimiento de voz
+
+### DevOps
+- **GitHub Pages**: Hosting frontend
+- **Service Worker**: Caching y modo offline
+- **PWA**: Progressive Web App
+- **Git**: Control de versiones
 
 ---
 

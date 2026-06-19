@@ -136,6 +136,27 @@
     pre code{background:none;padding:0;}
     strong{color:var(--gold);font-weight:700;}
     
+    /* Skeleton Loading Screens */
+    .skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-loading 1.5s infinite;}
+    @keyframes skeleton-loading{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    
+    .skeleton-message{display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.5rem;}
+    .skeleton-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-loading 1.5s infinite;}
+    .skeleton-bubble{flex:1;max-width:65%;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.2rem 1.5rem;}
+    .skeleton-line{height:14px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;border-radius:4px;margin-bottom:0.75rem;animation:skeleton-loading 1.5s infinite;}
+    .skeleton-line:last-child{margin-bottom:0;}
+    .skeleton-line.short{width:70%;}
+    .skeleton-line.medium{width:85%;}
+    .skeleton-line.long{width:100%;}
+    
+    .skeleton-history-item{padding:0.65rem;background:var(--off-white);border-radius:var(--radius-sm);margin-bottom:0.5rem;}
+    .skeleton-history-title{height:12px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;border-radius:4px;margin-bottom:0.4rem;animation:skeleton-loading 1.5s infinite;}
+    .skeleton-history-date{height:10px;width:60%;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;border-radius:4px;animation:skeleton-loading 1.5s infinite;}
+    
+    .skeleton-stats{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;}
+    .skeleton-stats-line{height:16px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;border-radius:4px;margin-bottom:0.5rem;animation:skeleton-loading 1.5s infinite;}
+    .skeleton-stats-line:last-child{margin-bottom:0;width:80%;}
+    
     @media(max-width:900px){
       .chat-layout{flex-direction:column;}
       .sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:1rem;}
@@ -157,6 +178,7 @@
           <span class="premium-badge free" id="planBadge">Gratis</span>
           <span class="nav-user-name" id="userName">Cargando...</span>
         </div>
+        <button class="btn-nav" id="themeToggle" title="Cambiar tema">🌙</button>
         <button class="btn-nav" id="logoutBtn">Salir</button>
       </div>
     </div>
@@ -170,6 +192,18 @@
       <button class="sidebar-btn-special" id="studyPlanBtn">
         📚 Generar Plan de Estudio
       </button>
+      
+      <!-- Botón de Exportar PDF -->
+      <button class="sidebar-btn-special" id="exportPDFBtn" style="background:linear-gradient(135deg,#10b981,#059669);">
+        📄 Exportar Chat a PDF
+      </button>
+      
+      <!-- Estadísticas de uso -->
+      <div id="userStats" style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;display:none;">
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.5rem;">📊 Tu progreso</div>
+        <div style="font-size:0.9rem;color:var(--navy);"><strong id="statsQuestions">0</strong> preguntas este mes</div>
+        <div style="font-size:0.9rem;color:var(--navy);margin-top:0.25rem;">🔥 Racha: <strong id="statsStreak">0</strong> días</div>
+      </div>
       
       <!-- Contador visual de preguntas -->
       <div id="questionCounter" style="display:none;" class="question-counter">
@@ -223,6 +257,9 @@
           </label>
           <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
           
+          <!-- Botón de voz -->
+          <button class="btn-attach" id="voiceBtn" title="Grabar voz">🎤</button>
+          
           <!-- Preview de archivo adjunto -->
           <div id="filePreview" style="display:none;"></div>
           
@@ -244,6 +281,10 @@
 
   <!-- PDF.js para extraer texto de PDFs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <!-- jsPDF para exportar a PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
   <script>
     // Configurar PDF.js worker
     if (typeof pdfjsLib !== 'undefined') {
@@ -478,6 +519,186 @@
     // Cargar suscripción al iniciar
     loadSubscription();
     document.getElementById('welcomeName').textContent = session.name;
+
+    // ========================================
+    // PWA - SERVICE WORKER
+    // ========================================
+    
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/luminam-ia/sw.js')
+          .then(reg => console.log('✅ Service Worker registrado'))
+          .catch(err => console.log('❌ SW error:', err));
+      });
+    }
+
+    // ========================================
+    // ESTADÍSTICAS DE USO
+    // ========================================
+    
+    function updateUserStats() {
+      const stats = JSON.parse(localStorage.getItem('luminom_stats') || '{"totalQuestions":0,"lastUseDate":"","streak":0}');
+      const today = new Date().toDateString();
+      
+      // Actualizar racha
+      if (stats.lastUseDate === today) {
+        // Ya usó hoy
+      } else if (stats.lastUseDate === new Date(Date.now() - 86400000).toDateString()) {
+        // Usó ayer, incrementar racha
+        stats.streak = (stats.streak || 0) + 1;
+      } else if (stats.lastUseDate !== '') {
+        // Rompió racha
+        stats.streak = 1;
+      } else {
+        stats.streak = 1;
+      }
+      
+      stats.lastUseDate = today;
+      localStorage.setItem('luminom_stats', JSON.stringify(stats));
+      
+      // Mostrar estadísticas
+      document.getElementById('statsQuestions').textContent = stats.totalQuestions || 0;
+      document.getElementById('statsStreak').textContent = stats.streak || 0;
+      document.getElementById('userStats').style.display = 'block';
+    }
+    
+    updateUserStats();
+
+    // ========================================
+    // EXPORTAR CHAT A PDF
+    // ========================================
+    
+    document.getElementById('exportPDFBtn').addEventListener('click', () => {
+      if (conversationHistory.length === 0) {
+        alert('⚠️ No hay conversación para exportar. Haz algunas preguntas primero.');
+        return;
+      }
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Título
+        doc.setFontSize(20);
+        doc.setTextColor(10, 22, 40);
+        doc.text('Luminom IA - Conversación', 20, 20);
+        
+        // Info
+        doc.setFontSize(10);
+        doc.setTextColor(74, 85, 104);
+        doc.text(`Estudiante: ${session.name}`, 20, 30);
+        doc.text(`Carrera: ${session.carrera}`, 20, 35);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-CO')}`, 20, 40);
+        
+        // Conversación
+        let yPos = 50;
+        doc.setFontSize(11);
+        
+        conversationHistory.forEach((msg, index) => {
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          // Rol
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(msg.role === 'user' ? 201 : 16, msg.role === 'user' ? 168 : 185, msg.role === 'user' ? 76 : 129);
+          doc.text(msg.role === 'user' ? 'Tú:' : 'Luminom IA:', 20, yPos);
+          
+          // Contenido
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(10, 22, 40);
+          const lines = doc.splitTextToSize(msg.content, 170);
+          doc.text(lines, 20, yPos + 5);
+          
+          yPos += 5 + (lines.length * 5) + 5;
+        });
+        
+        // Guardar
+        doc.save(`luminom-conversacion-${new Date().toISOString().split('T')[0]}.pdf`);
+        
+        alert('✅ Conversación exportada exitosamente');
+      } catch (error) {
+        console.error('Error al exportar PDF:', error);
+        alert('⚠️ Error al exportar PDF. Inténtalo de nuevo.');
+      }
+    });
+
+    // ========================================
+    // RECONOCIMIENTO DE VOZ
+    // ========================================
+    
+    let recognition = null;
+    let isRecording = false;
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'es-CO';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('userInput').value = transcript;
+        isRecording = false;
+        document.getElementById('voiceBtn').textContent = '🎤';
+        document.getElementById('voiceBtn').style.background = '';
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Error de reconocimiento:', event.error);
+        isRecording = false;
+        document.getElementById('voiceBtn').textContent = '🎤';
+        document.getElementById('voiceBtn').style.background = '';
+        
+        if (event.error === 'no-speech') {
+          alert('⚠️ No se detectó voz. Intenta de nuevo.');
+        } else if (event.error === 'not-allowed') {
+          alert('⚠️ Necesitas dar permiso para usar el micrófono.');
+        }
+      };
+      
+      recognition.onend = () => {
+        isRecording = false;
+        document.getElementById('voiceBtn').textContent = '🎤';
+        document.getElementById('voiceBtn').style.background = '';
+      };
+      
+      document.getElementById('voiceBtn').addEventListener('click', () => {
+        if (isRecording) {
+          recognition.stop();
+          isRecording = false;
+          document.getElementById('voiceBtn').textContent = '🎤';
+          document.getElementById('voiceBtn').style.background = '';
+        } else {
+          recognition.start();
+          isRecording = true;
+          document.getElementById('voiceBtn').textContent = '⏹️';
+          document.getElementById('voiceBtn').style.background = '#ef4444';
+        }
+      });
+    } else {
+      document.getElementById('voiceBtn').style.display = 'none';
+      console.log('❌ Reconocimiento de voz no soportado en este navegador');
+    }
+
+    // ========================================
+    // DARK MODE
+    // ========================================
+    
+    // Cargar tema guardado
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+      document.getElementById('themeToggle').textContent = '☀️';
+    }
+    
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDark);
+      document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+    });
 
     // ========================================
     // GENERADOR DE PLAN DE ESTUDIO
@@ -1161,8 +1382,8 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       const session = Auth.getSession();
       const historyList = document.getElementById('historyList');
       
-      // Mostrar indicador de carga
-      historyList.innerHTML = '<div class="history-item">📁 Cargando historial...</div>';
+      // Mostrar skeleton screens mientras carga
+      showHistorySkeleton();
       
       try {
         console.log('🔵 Cargando historial desde Firebase...');
@@ -1217,6 +1438,25 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
         // NO usar localStorage como fallback - queremos que el usuario vea que Firebase no está funcionando
         console.log('⚠️ No se usará localStorage - esperando configuración de Firebase');
       }
+    }
+    
+    // Mostrar skeleton loading para historial
+    function showHistorySkeleton() {
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = `
+        <div class="skeleton-history-item">
+          <div class="skeleton-history-title"></div>
+          <div class="skeleton-history-date"></div>
+        </div>
+        <div class="skeleton-history-item">
+          <div class="skeleton-history-title"></div>
+          <div class="skeleton-history-date"></div>
+        </div>
+        <div class="skeleton-history-item">
+          <div class="skeleton-history-title"></div>
+          <div class="skeleton-history-date"></div>
+        </div>
+      `;
     }
 
     function loadFromLocalStorage() {
@@ -1340,6 +1580,80 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
     });
 
     document.getElementById('userInput').focus();
+  </script>
+</body>
+</html>
+
+
+    // ========================================
+    // SKELETON LOADING SCREENS
+    // ========================================
+    
+    // Mostrar skeleton screens para mensajes
+    function showMessagesSkeleton() {
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = `
+        <div class="skeleton-message">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-bubble">
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+        <div class="skeleton-message" style="flex-direction:row-reverse;">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-bubble">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line long"></div>
+          </div>
+        </div>
+        <div class="skeleton-message">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-bubble">
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Aplicar skeleton screens al cargar chat
+    window.loadChat = async function(chatId) {
+      try {
+        // Mostrar skeleton mientras carga
+        showMessagesSkeleton();
+        
+        // Cargar desde Firebase
+        const chatDoc = await db.collection('chats').doc(chatId).get();
+        
+        if (!chatDoc.exists) {
+          console.log('⚠️ Chat no encontrado');
+          newChat();
+          return;
+        }
+        
+        const chat = chatDoc.data();
+        conversationHistory = chat.messages || [];
+        currentChatId = chatId;
+        
+        // Renderizar mensajes reales
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML = '';
+        
+        conversationHistory.forEach(msg => {
+          addMessage(msg.content, msg.role === 'user');
+        });
+        
+        console.log(`✅ Chat cargado: ${conversationHistory.length} mensajes`);
+      } catch (error) {
+        console.error('❌ Error al cargar chat:', error);
+        newChat();
+      }
+    };
+    
+    console.log('✅ Skeleton loading screens habilitadas');
   </script>
 </body>
 </html>
