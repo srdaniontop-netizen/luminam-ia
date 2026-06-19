@@ -185,6 +185,33 @@
       <button class="new-chat-btn" onclick="newChat()">+ Nueva conversación</button>
     </div>
 
+    <div class="sidebar-section" style="max-height:300px;overflow-y:auto;">
+      <div class="sidebar-label">Herramientas</div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;">
+        <button class="qbtn" onclick="showStudyPlanForm()" style="background:rgba(102,126,234,0.1);border-color:rgba(102,126,234,0.3);color:#a5b4fc;">
+          📚 Plan de Estudio
+        </button>
+        <button class="qbtn" onclick="exportChatToPDF()" style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:#6ee7b7;">
+          📄 Exportar a PDF
+        </button>
+        <button class="qbtn" onclick="toggleVoiceRecording()" id="voiceBtn2" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.3);color:#fbbf24;">
+          🎤 Grabar Voz
+        </button>
+        <button class="qbtn" onclick="showLibrary()" style="background:rgba(236,72,153,0.1);border-color:rgba(236,72,153,0.3);color:#f9a8d4;">
+          💾 Biblioteca
+        </button>
+        <button class="qbtn" onclick="showGoals()" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:#c4b5fd;">
+          🎯 Mis Metas
+        </button>
+        <button class="qbtn" onclick="showAnalytics()" style="background:rgba(14,165,233,0.1);border-color:rgba(14,165,233,0.3);color:#7dd3fc;">
+          📊 Análisis
+        </button>
+        <button class="qbtn" onclick="showAchievements()" style="background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.3);color:#fcd34d;">
+          🏆 Logros
+        </button>
+      </div>
+    </div>
+
     <div class="sidebar-section">
       <div class="sidebar-label">Especialidades</div>
       <div class="tags">
@@ -264,7 +291,16 @@
 
     <!-- INPUT -->
     <div style="border-top:1px solid rgba(255,255,255,0.07);padding:1rem 1.25rem;flex-shrink:0;background:rgba(0,0,0,0.15);">
+      <!-- File Preview -->
+      <div id="filePreview" style="display:none;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;"></div>
+      
       <div style="display:flex;gap:0.75rem;align-items:flex-end;">
+        <!-- Botón adjuntar archivo -->
+        <label for="fileInput" style="width:44px;height:44px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--t);font-size:1.2rem;" title="Adjuntar archivo">
+          📎
+        </label>
+        <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
+        
         <textarea style="flex:1;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.1);color:var(--white);padding:0.8rem 1rem;border-radius:14px;font-size:0.88rem;outline:none;resize:none;max-height:140px;min-height:44px;overflow-y:auto;transition:var(--t);line-height:1.5;" id="chatInput" placeholder="Escribe tu pregunta académica aquí..." rows="1"></textarea>
         <button style="width:44px;height:44px;background:var(--gold);color:var(--navy);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--t);" id="sendBtn" onclick="sendMessage()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -358,6 +394,366 @@
     document.getElementById('sideCarrera').textContent = session.carrera || 'Carrera no especificada';
     document.getElementById('sideAvatar').textContent = session.name[0].toUpperCase();
     document.getElementById('welcomeName').textContent = session.name;
+
+    // ========================================
+    // MANEJO DE ARCHIVOS E IMÁGENES
+    // ========================================
+    
+    let attachedFile = null;
+    let attachedFileDataURL = null;
+    let extractedFileContent = null;
+    
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Validar tamaño (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('⚠️ El archivo es muy grande. Máximo 5MB.');
+        e.target.value = '';
+        return;
+      }
+      
+      attachedFile = file;
+      extractedFileContent = null;
+      
+      // Mostrar preview
+      showFilePreview(file, null, true);
+      
+      try {
+        // Procesar según tipo
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            attachedFileDataURL = event.target.result;
+            showFilePreview(file, event.target.result, false);
+          };
+          reader.readAsDataURL(file);
+        } else if (file.type === 'application/pdf') {
+          await extractPDFText(file);
+        } else if (file.type === 'text/plain') {
+          await extractTextFromFile(file);
+        } else {
+          showFilePreview(file, null, false);
+        }
+      } catch (error) {
+        console.error('Error al procesar archivo:', error);
+        alert('⚠️ Error al procesar el archivo.');
+        removeFile();
+      }
+    });
+    
+    async function extractPDFText(file) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        let fullText = '';
+        const numPages = pdf.numPages;
+        
+        for (let i = 1; i <= numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += `\n--- Página ${i} ---\n${pageText}\n`;
+        }
+        
+        extractedFileContent = fullText.trim();
+        if (extractedFileContent.length > 10000) {
+          extractedFileContent = extractedFileContent.substring(0, 10000) + '\n\n[... Contenido truncado]';
+        }
+        
+        showFilePreview(file, null, false);
+      } catch (error) {
+        console.error('Error al extraer PDF:', error);
+        alert('⚠️ No se pudo leer el PDF.');
+        removeFile();
+      }
+    }
+    
+    async function extractTextFromFile(file) {
+      try {
+        const text = await file.text();
+        extractedFileContent = text.trim();
+        
+        if (extractedFileContent.length > 10000) {
+          extractedFileContent = extractedFileContent.substring(0, 10000) + '\n\n[... Contenido truncado]';
+        }
+        
+        showFilePreview(file, null, false);
+      } catch (error) {
+        console.error('Error al leer archivo:', error);
+        alert('⚠️ No se pudo leer el archivo.');
+        removeFile();
+      }
+    }
+    
+    function showFilePreview(file, dataURL, isProcessing) {
+      const preview = document.getElementById('filePreview');
+      preview.style.display = 'flex';
+      preview.style.alignItems = 'center';
+      preview.style.gap = '0.75rem';
+      
+      let previewHTML = '';
+      let statusText = '';
+      
+      if (isProcessing) {
+        previewHTML = `<span style="font-size:1.5rem;">⏳</span>`;
+        statusText = '<span style="color:#fbbf24;">Procesando...</span>';
+      } else if (dataURL && file.type.startsWith('image/')) {
+        previewHTML = `<img src="${dataURL}" style="max-width:60px;max-height:60px;border-radius:6px;object-fit:cover;" />`;
+        statusText = '<span style="color:#10b981;">✓ Listo</span>';
+      } else if (extractedFileContent) {
+        previewHTML = `<span style="font-size:1.5rem;">📄</span>`;
+        statusText = `<span style="color:#10b981;">✓ Texto extraído (${extractedFileContent.length} caracteres)</span>`;
+      } else {
+        previewHTML = `<span style="font-size:1.5rem;">📄</span>`;
+        statusText = '<span style="color:#fbbf24;">Archivo adjunto</span>';
+      }
+      
+      preview.innerHTML = `
+        ${previewHTML}
+        <div style="flex:1;">
+          <strong style="display:block;font-size:0.85rem;">${file.name}</strong>
+          <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">${(file.size / 1024).toFixed(1)} KB • ${statusText}</span>
+        </div>
+        <span onclick="removeFile()" style="cursor:pointer;color:#ef4444;font-weight:700;font-size:1.2rem;">✕</span>
+      `;
+    }
+    
+    window.removeFile = function() {
+      attachedFile = null;
+      attachedFileDataURL = null;
+      extractedFileContent = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('filePreview').style.display = 'none';
+    };
+
+    // ========================================
+    // EXPORTAR A PDF
+    // ========================================
+    
+    window.exportChatToPDF = function() {
+      if (conversationHistory.length === 0) {
+        alert('⚠️ No hay conversación para exportar.');
+        return;
+      }
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(20);
+        doc.setTextColor(10, 22, 40);
+        doc.text('Luminom IA - Conversación', 20, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(74, 85, 104);
+        doc.text(`Estudiante: ${session.name}`, 20, 30);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-CO')}`, 20, 35);
+        
+        let yPos = 45;
+        doc.setFontSize(11);
+        
+        conversationHistory.forEach((msg) => {
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(msg.role === 'user' ? 201 : 16, msg.role === 'user' ? 168 : 185, msg.role === 'user' ? 76 : 129);
+          doc.text(msg.role === 'user' ? 'Tú:' : 'Luminom IA:', 20, yPos);
+          
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(10, 22, 40);
+          const lines = doc.splitTextToSize(msg.content, 170);
+          doc.text(lines, 20, yPos + 5);
+          
+          yPos += 5 + (lines.length * 5) + 5;
+        });
+        
+        doc.save(`luminom-conversacion-${new Date().getTime()}.pdf`);
+        alert('✅ Conversación exportada exitosamente');
+      } catch (error) {
+        console.error('Error al exportar PDF:', error);
+        alert('⚠️ Error al exportar PDF.');
+      }
+    };
+
+    // ========================================
+    // RECONOCIMIENTO DE VOZ
+    // ========================================
+    
+    let recognition = null;
+    let isRecording = false;
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'es-CO';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('chatInput').value = transcript;
+        isRecording = false;
+        const btn = document.getElementById('voiceBtn2');
+        if (btn) {
+          btn.textContent = '🎤 Grabar Voz';
+          btn.style.background = 'rgba(245,158,11,0.1)';
+        }
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Error de reconocimiento:', event.error);
+        isRecording = false;
+        const btn = document.getElementById('voiceBtn2');
+        if (btn) {
+          btn.textContent = '🎤 Grabar Voz';
+          btn.style.background = 'rgba(245,158,11,0.1)';
+        }
+        
+        if (event.error === 'no-speech') {
+          alert('⚠️ No se detectó voz.');
+        }
+      };
+      
+      recognition.onend = () => {
+        isRecording = false;
+        const btn = document.getElementById('voiceBtn2');
+        if (btn) {
+          btn.textContent = '🎤 Grabar Voz';
+          btn.style.background = 'rgba(245,158,11,0.1)';
+        }
+      };
+    }
+    
+    window.toggleVoiceRecording = function() {
+      if (!recognition) {
+        alert('⚠️ Reconocimiento de voz no soportado en este navegador.');
+        return;
+      }
+      
+      const btn = document.getElementById('voiceBtn2');
+      
+      if (isRecording) {
+        recognition.stop();
+        isRecording = false;
+        btn.textContent = '🎤 Grabar Voz';
+        btn.style.background = 'rgba(245,158,11,0.1)';
+      } else {
+        recognition.start();
+        isRecording = true;
+        btn.textContent = '⏹️ Detener';
+        btn.style.background = '#ef4444';
+      }
+    };
+
+    // ========================================
+    // PLAN DE ESTUDIO
+    // ========================================
+    
+    window.showStudyPlanForm = function() {
+      hideWelcome();
+      const messagesDiv = document.getElementById('messagesDiv');
+      
+      const formHTML = `
+        <div class="msg bot" style="max-width:600px;margin:2rem auto;">
+          <div class="msg-av bot">L</div>
+          <div class="bubble bot" style="max-width:100%;">
+            <h3 style="margin-bottom:1rem;color:var(--gold);">📚 Generar Plan de Estudio</h3>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;color:var(--white);">¿Qué materia?</label>
+              <input type="text" id="studySubject" placeholder="Ej: Cálculo Diferencial" style="width:100%;padding:0.75rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:0.9rem;background:rgba(255,255,255,0.05);color:var(--white);" />
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;color:var(--white);">¿Cuánto tiempo?</label>
+              <select id="studyTime" style="width:100%;padding:0.75rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:0.9rem;background:rgba(255,255,255,0.05);color:var(--white);">
+                <option value="1 semana">1 semana</option>
+                <option value="2 semanas" selected>2 semanas</option>
+                <option value="1 mes">1 mes</option>
+                <option value="2 meses">2 meses</option>
+              </select>
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;color:var(--white);">¿Horas al día?</label>
+              <select id="studyHours" style="width:100%;padding:0.75rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:0.9rem;background:rgba(255,255,255,0.05);color:var(--white);">
+                <option value="1 hora">1 hora</option>
+                <option value="2 horas" selected>2 horas</option>
+                <option value="3 horas">3 horas</option>
+                <option value="4 horas">4 horas</option>
+                <option value="5+ horas">5+ horas</option>
+              </select>
+            </div>
+            <button onclick="generateStudyPlan()" style="width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:0.85rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:1rem;">
+              ✨ Generar Mi Plan
+            </button>
+          </div>
+        </div>
+      `;
+      
+      messagesDiv.innerHTML = formHTML;
+      messagesDiv.style.display = 'flex';
+    };
+    
+    window.generateStudyPlan = async function() {
+      const subject = document.getElementById('studySubject').value.trim();
+      const time = document.getElementById('studyTime').value;
+      const hours = document.getElementById('studyHours').value;
+      
+      if (!subject) {
+        alert('Por favor ingresa la materia');
+        return;
+      }
+      
+      const messagesDiv = document.getElementById('messagesDiv');
+      messagesDiv.innerHTML = '';
+      
+      const promptText = `Crea un plan de estudio detallado para ${subject}. 
+Duración: ${time}
+Tiempo disponible: ${hours} al día
+Carrera: ${session.carrera}
+
+Formato del plan:
+- Organizado por días/semanas
+- Temas específicos por sesión
+- Objetivos claros
+- Recursos recomendados
+- Consejos de estudio`;
+      
+      addMessage(`📚 Generar plan de estudio para:\n• Materia: ${subject}\n• Tiempo: ${time}\n• Horas diarias: ${hours}`, true);
+      
+      conversationHistory = [];
+      conversationHistory.push({ role: 'user', content: promptText });
+      
+      showTyping();
+      const aiResponse = await callGroqAPI(promptText);
+      hideTyping();
+      
+      addMessage(aiResponse, false);
+      conversationHistory.push({ role: 'assistant', content: aiResponse });
+      
+      saveCurrentChat();
+    };
+
+    // Funciones placeholder para otras herramientas
+    window.showLibrary = function() {
+      alert('💾 Biblioteca de Recursos\n\nFuncionalidad en desarrollo. Aquí podrás guardar y organizar recursos útiles.');
+    };
+    
+    window.showGoals = function() {
+      alert('🎯 Metas de Estudio\n\nFuncionalidad en desarrollo. Aquí podrás definir y seguir tus metas académicas.');
+    };
+    
+    window.showAnalytics = function() {
+      alert('📊 Análisis de Rendimiento\n\nFuncionalidad en desarrollo. Aquí verás estadísticas de tu progreso.');
+    };
+    
+    window.showAchievements = function() {
+      alert('🏆 Sistema de Logros\n\nFuncionalidad en desarrollo. Aquí verás tus logros desbloqueados.');
+    };
 
     // ========================================
     // SISTEMA DE SUSCRIPCIÓN Y LÍMITES
@@ -1197,7 +1593,55 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       const input = document.getElementById('chatInput');
       const message = input.value.trim();
       
-      if (!message) return;
+      if (!message && !attachedFile) return;
+      
+      if (!API_CONFIG.key) {
+        alert('⚠️ Error: No hay API Key configurada.');
+        return;
+      }
+      
+      input.value = '';
+      input.style.height = 'auto';
+      
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      
+      // Construir mensaje con contexto del archivo
+      let fullMessage = message;
+      
+      if (attachedFile) {
+        if (extractedFileContent) {
+          fullMessage = `He adjuntado el archivo "${attachedFile.name}" con el siguiente contenido:\n\n${extractedFileContent}\n\n---\n\nMi pregunta: ${message || 'Analiza este contenido y explícamelo'}`;
+        } else if (attachedFile.type.startsWith('image/')) {
+          fullMessage = `[Imagen adjunta: ${attachedFile.name}]\n\n${message || 'Analiza esta imagen'}\n\n(Nota: Descripción visual no disponible actualmente)`;
+        } else {
+          fullMessage = `[Archivo adjunto: ${attachedFile.name}]\n\n${message}`;
+        }
+        
+        removeFile();
+      }
+      
+      addMessage(message || '📎 Archivo adjunto', true);
+      conversationHistory.push({ role: 'user', content: fullMessage });
+      
+      showTyping();
+      
+      const aiResponse = await callGroqAPI(fullMessage);
+      
+      hideTyping();
+      addMessage(aiResponse, false);
+      
+      conversationHistory.push({ role: 'assistant', content: aiResponse });
+      
+      saveCurrentChat();
+      
+      if (conversationHistory.length > 20) {
+        conversationHistory = conversationHistory.slice(-20);
+      }
+      
+      sendBtn.disabled = false;
+      input.focus();
+    }
       
       // ============================================
       // VERIFICAR LÍMITE DE PREGUNTAS (PLAN GRATIS)
