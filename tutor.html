@@ -242,6 +242,15 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+  <!-- PDF.js para extraer texto de PDFs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    // Configurar PDF.js worker
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+
   <script>
     // Configuración de Firebase
     const firebaseConfig = {
@@ -564,6 +573,7 @@ Formato del plan:
     
     let attachedFile = null;
     let attachedFileDataURL = null;
+    let extractedFileContent = null;
     
     document.getElementById('fileInput').addEventListener('change', async (e) => {
       const file = e.target.files[0];
@@ -577,36 +587,123 @@ Formato del plan:
       }
       
       attachedFile = file;
+      extractedFileContent = null;
       
-      // Convertir a base64 para imágenes
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          attachedFileDataURL = event.target.result;
-          showFilePreview(file, event.target.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        showFilePreview(file, null);
+      // Mostrar indicador de procesamiento
+      showFilePreview(file, null, true);
+      
+      try {
+        // Procesar según tipo de archivo
+        if (file.type.startsWith('image/')) {
+          // Imágenes: convertir a base64
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            attachedFileDataURL = event.target.result;
+            showFilePreview(file, event.target.result, false);
+          };
+          reader.readAsDataURL(file);
+        } else if (file.type === 'application/pdf') {
+          // PDFs: extraer texto
+          await extractPDFText(file);
+        } else if (file.type === 'text/plain') {
+          // TXT: leer directamente
+          await extractTextFromFile(file);
+        } else {
+          // Otros archivos
+          showFilePreview(file, null, false);
+        }
+      } catch (error) {
+        console.error('Error al procesar archivo:', error);
+        alert('⚠️ Error al procesar el archivo. Intenta con otro formato.');
+        removeFile();
       }
     });
     
-    function showFilePreview(file, dataURL) {
+    // Extraer texto de archivos PDF
+    async function extractPDFText(file) {
+      try {
+        console.log('📄 Extrayendo texto de PDF...');
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        let fullText = '';
+        const numPages = pdf.numPages;
+        
+        // Extraer texto de cada página
+        for (let i = 1; i <= numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += `\n--- Página ${i} ---\n${pageText}\n`;
+        }
+        
+        extractedFileContent = fullText.trim();
+        console.log(`✅ Extraídas ${numPages} páginas, ${extractedFileContent.length} caracteres`);
+        
+        // Limitar a 10,000 caracteres para no sobrecargar la IA
+        if (extractedFileContent.length > 10000) {
+          extractedFileContent = extractedFileContent.substring(0, 10000) + '\n\n[... Contenido truncado. Solo se muestran los primeros 10,000 caracteres]';
+        }
+        
+        showFilePreview(file, null, false);
+      } catch (error) {
+        console.error('Error al extraer PDF:', error);
+        alert('⚠️ No se pudo leer el PDF. Asegúrate de que no esté protegido.');
+        removeFile();
+      }
+    }
+    
+    // Extraer texto de archivos TXT
+    async function extractTextFromFile(file) {
+      try {
+        console.log('📝 Leyendo archivo de texto...');
+        
+        const text = await file.text();
+        extractedFileContent = text.trim();
+        
+        console.log(`✅ Leído, ${extractedFileContent.length} caracteres`);
+        
+        // Limitar a 10,000 caracteres
+        if (extractedFileContent.length > 10000) {
+          extractedFileContent = extractedFileContent.substring(0, 10000) + '\n\n[... Contenido truncado]';
+        }
+        
+        showFilePreview(file, null, false);
+      } catch (error) {
+        console.error('Error al leer archivo:', error);
+        alert('⚠️ No se pudo leer el archivo.');
+        removeFile();
+      }
+    }
+    
+    function showFilePreview(file, dataURL, isProcessing) {
       const preview = document.getElementById('filePreview');
       preview.style.display = 'flex';
       
       let previewHTML = '';
-      if (dataURL && file.type.startsWith('image/')) {
+      let statusText = '';
+      
+      if (isProcessing) {
+        previewHTML = `<span style="font-size:2rem;">⏳</span>`;
+        statusText = '<span style="color:#f59e0b;">Procesando...</span>';
+      } else if (dataURL && file.type.startsWith('image/')) {
         previewHTML = `<img src="${dataURL}" alt="Preview" />`;
+        statusText = '<span style="color:#10b981;">✓ Listo</span>';
+      } else if (extractedFileContent) {
+        previewHTML = `<span style="font-size:2rem;">📄</span>`;
+        const charCount = extractedFileContent.length;
+        statusText = `<span style="color:#10b981;">✓ Texto extraído (${charCount} caracteres)</span>`;
       } else {
         previewHTML = `<span style="font-size:2rem;">📄</span>`;
+        statusText = '<span style="color:#f59e0b;">Nombre del archivo solamente</span>';
       }
       
       preview.innerHTML = `
         ${previewHTML}
         <div class="file-info">
           <strong>${file.name}</strong><br>
-          <span style="color:var(--text-muted);font-size:0.8rem;">${(file.size / 1024).toFixed(1)} KB</span>
+          <span style="font-size:0.75rem;">${(file.size / 1024).toFixed(1)} KB • ${statusText}</span>
         </div>
         <span class="file-remove" onclick="removeFile()">✕</span>
       `;
@@ -615,6 +712,7 @@ Formato del plan:
     window.removeFile = function() {
       attachedFile = null;
       attachedFileDataURL = null;
+      extractedFileContent = null;
       document.getElementById('fileInput').value = '';
       document.getElementById('filePreview').style.display = 'none';
     };
@@ -661,11 +759,14 @@ Formato del plan:
       let fullMessage = message;
       
       if (attachedFile) {
-        if (attachedFile.type.startsWith('image/')) {
-          fullMessage = `[Imagen adjunta: ${attachedFile.name}]\n\n${message || 'Analiza esta imagen y explícame qué ves'}`;
-          // TODO: Integrar API de visión (GPT-4 Vision, Claude Vision, etc.)
-          // Por ahora, solo mencionamos que hay imagen
+        if (extractedFileContent) {
+          // Si se extrajo contenido del archivo
+          fullMessage = `He adjuntado el archivo "${attachedFile.name}" con el siguiente contenido:\n\n${extractedFileContent}\n\n---\n\nMi pregunta: ${message || 'Analiza este contenido y explícamelo'}`;
+        } else if (attachedFile.type.startsWith('image/')) {
+          // Para imágenes (futuro: integrar API de visión)
+          fullMessage = `[Imagen adjunta: ${attachedFile.name}]\n\n${message || 'Analiza esta imagen y explícame qué ves'}\n\n(Nota: Actualmente no puedo ver el contenido de imágenes, pero puedo ayudarte si describes lo que ves)`;
         } else {
+          // Para archivos sin extracción
           fullMessage = `[Archivo adjunto: ${attachedFile.name}]\n\n${message}`;
         }
         
