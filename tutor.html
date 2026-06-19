@@ -54,6 +54,10 @@
     .profile-carrera{font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:0.1rem;}
     .tags{display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.5rem;}
     .tag{font-size:0.68rem;background:rgba(201,168,76,0.1);border:1px solid var(--border-gold);color:#E8C97A;padding:0.22rem 0.6rem;border-radius:100px;}
+    .stats-row{display:flex;gap:0.75rem;margin-top:0.75rem;}
+    .stat-box{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0.5rem;text-align:center;}
+    .stat-value{font-size:1.1rem;font-weight:700;color:var(--gold);}
+    .stat-label{font-size:0.65rem;color:rgba(255,255,255,0.45);margin-top:0.2rem;}
     .quick-list{display:flex;flex-direction:column;gap:0.4rem;}
     .qbtn{text-align:left;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.65);padding:0.55rem 0.75rem;border-radius:8px;font-size:0.76rem;cursor:pointer;transition:var(--t);line-height:1.4;}
     .qbtn:hover{background:rgba(201,168,76,0.1);border-color:var(--border-gold);color:#E8C97A;}
@@ -129,6 +133,16 @@
     .modal-btn-primary:hover{background:var(--gold-light);}
     .modal-btn-secondary{background:rgba(10,22,40,0.1);color:var(--navy);}
     .modal-btn-secondary:hover{background:rgba(10,22,40,0.2);}
+    
+    /* ACTION BUTTONS */
+    .action-buttons{display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;}
+    .action-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);padding:0.5rem 0.75rem;border-radius:8px;font-size:0.75rem;cursor:pointer;transition:var(--t);display:flex;align-items:center;gap:0.4rem;}
+    .action-btn:hover{background:rgba(201,168,76,0.1);border-color:var(--border-gold);color:var(--gold-light);}
+    
+    /* VOICE RECORDING */
+    .voice-recording{position:fixed;bottom:100px;right:30px;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;padding:1rem 1.5rem;border-radius:12px;box-shadow:0 10px 40px rgba(239,68,68,0.4);z-index:9999;display:none;animation:pulse 1.5s infinite;}
+    .voice-recording.active{display:flex;flex-direction:column;align-items:center;gap:0.5rem;}
+    @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
   </style>
 </head>
 
@@ -168,6 +182,16 @@
         </div>
         <div class="tags">
           <span class="tag" id="planBadge">Gratis</span>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-value" id="questionCount">0</div>
+            <div class="stat-label">Preguntas</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value" id="chatCount">0</div>
+            <div class="stat-label">Chats</div>
+          </div>
         </div>
       </div>
 
@@ -237,6 +261,18 @@
 
       <!-- Input Area -->
       <div class="input-area">
+        <div class="action-buttons">
+          <button class="action-btn" onclick="exportToPDF()" title="Exportar chat a PDF">
+            📄 Exportar PDF
+          </button>
+          <label class="action-btn" title="Subir archivo (imagen o PDF)">
+            📎 Subir archivo
+            <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none;" onchange="handleFileUpload(event)"/>
+          </label>
+          <button class="action-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="Reconocimiento de voz">
+            🎤 Voz
+          </button>
+        </div>
         <div class="file-preview" id="filePreview">
           <span class="file-preview-icon">📄</span>
           <div class="file-preview-info">
@@ -262,6 +298,12 @@
 
   </div>
 
+  <!-- Voice Recording Indicator -->
+  <div class="voice-recording" id="voiceRecording">
+    <div style="font-size:2rem;">🎤</div>
+    <div style="font-weight:600;">Escuchando...</div>
+    <div style="font-size:0.75rem;opacity:0.9;">Habla ahora</div>
+  </div>
 
   <!-- MODAL for features -->
   <div class="modal" id="featureModal">
@@ -283,6 +325,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- PDF.js for PDF text extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <script>
     // ============================================
@@ -316,6 +364,12 @@
     let currentChatId = null;
     let chatHistory = [];
     let attachedFile = null;
+    let attachedFileType = null;
+    let attachedFileText = null;
+    let isRecording = false;
+    let recognition = null;
+    let questionCount = 0;
+    let savedResources = [];
 
 
     // ============================================
@@ -487,28 +541,68 @@
       const input = document.getElementById('chatInput');
       const message = input.value.trim();
       
-      if (!message) return;
+      if (!message && !attachedFileText) return;
       
       // Disable input
       input.disabled = true;
       document.getElementById('sendBtn').disabled = true;
       
+      // Construct full message with file context
+      let fullMessage = message;
+      if (attachedFileText) {
+        fullMessage = `[Archivo adjunto: ${attachedFile.name}]\n\nContenido del archivo:\n${attachedFileText.substring(0, 3000)}\n\n---\n\nPregunta del usuario: ${message}`;
+      }
+      
       // Add user message to UI
-      addMessageToUI('user', message);
+      addMessageToUI('user', message || `📎 ${attachedFile.name}`);
       input.value = '';
+      
+      // Clear file
+      if (attachedFile) {
+        removeFile();
+      }
       
       // Show typing indicator
       document.getElementById('typingIndicator').classList.add('active');
       
+      // Increment question counter
+      questionCount++;
+      document.getElementById('questionCount').textContent = questionCount;
+      
+      // Update streak
+      const today = new Date().toDateString();
+      const lastActivity = localStorage.getItem('luminom_last_activity_' + currentUser.userId);
+      
+      if (lastActivity !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toDateString();
+        
+        if (lastActivity === yesterdayStr) {
+          // Continue streak
+          let streak = parseInt(localStorage.getItem('luminom_streak_' + currentUser.userId) || '0');
+          streak++;
+          localStorage.setItem('luminom_streak_' + currentUser.userId, streak.toString());
+        } else {
+          // Reset streak
+          localStorage.setItem('luminom_streak_' + currentUser.userId', '1');
+        }
+        
+        localStorage.setItem('luminom_last_activity_' + currentUser.userId, today);
+      }
+      
       try {
         // Call API
-        const response = await callGroqAPI(message);
+        const response = await callGroqAPI(fullMessage);
         
         // Hide typing indicator
         document.getElementById('typingIndicator').classList.remove('active');
         
         // Add bot response to UI
         addMessageToUI('assistant', response);
+        
+        // Add save button to bot message
+        addSaveButtonToLastMessage();
         
         // Save to Firestore
         await saveChatToFirestore(message, response);
@@ -523,6 +617,45 @@
       input.disabled = false;
       document.getElementById('sendBtn').disabled = false;
       input.focus();
+    }
+    
+    function addSaveButtonToLastMessage() {
+      const lastBotMessage = Array.from(document.querySelectorAll('.msg:not(.user)')).pop();
+      if (!lastBotMessage) return;
+      
+      const bubble = lastBotMessage.querySelector('.bubble');
+      if (!bubble || bubble.querySelector('.save-btn')) return;
+      
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'save-btn';
+      saveBtn.innerHTML = '💾 Guardar';
+      saveBtn.style.cssText = `
+        margin-top: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        background: var(--gold);
+        color: var(--navy);
+        border: none;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--t);
+      `;
+      
+      saveBtn.addEventListener('mouseover', function() {
+        this.style.background = 'var(--gold-light)';
+      });
+      
+      saveBtn.addEventListener('mouseout', function() {
+        this.style.background = 'var(--gold)';
+      });
+      
+      saveBtn.addEventListener('click', function() {
+        const content = bubble.textContent.replace('💾 Guardar', '').trim();
+        saveToLibrary(content);
+      });
+      
+      bubble.appendChild(saveBtn);
     }
 
     function handleInputKeydown(event) {
@@ -664,7 +797,14 @@
           
           // Reload history
           await loadChatHistory();
+          
+          // Update chat count
+          document.getElementById('chatCount').textContent = chatHistory.length;
         }
+        
+        // Save question count
+        localStorage.setItem('luminom_question_count_' + currentUser.userId, questionCount.toString());
+        
       } catch (error) {
         console.error('❌ Error saving chat:', error);
       }
@@ -677,7 +817,187 @@
     
     function removeFile() {
       attachedFile = null;
+      attachedFileType = null;
+      attachedFileText = null;
       document.getElementById('filePreview').classList.remove('active');
+    }
+    
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      attachedFile = file;
+      attachedFileType = file.type;
+      
+      // Show preview
+      const preview = document.getElementById('filePreview');
+      const fileName = document.getElementById('fileName');
+      const fileSize = document.getElementById('fileSize');
+      
+      fileName.textContent = file.name;
+      fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+      
+      // If PDF, extract text
+      if (file.type === 'application/pdf') {
+        try {
+          document.getElementById('fileName').textContent = file.name + ' (extrayendo texto...)';
+          
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+          let fullText = '';
+          
+          for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(' ');
+            fullText += pageText + '\n\n';
+          }
+          
+          attachedFileText = fullText;
+          document.getElementById('fileName').textContent = file.name + ' ✅';
+          console.log('✅ PDF text extracted:', fullText.substring(0, 200) + '...');
+        } catch (error) {
+          console.error('❌ Error extracting PDF:', error);
+          document.getElementById('fileName').textContent = file.name + ' (error al extraer)';
+        }
+      } else if (file.type.startsWith('image/')) {
+        // For images, just show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('filePreview').querySelector('.file-preview-icon').innerHTML = 
+            `<img src="${e.target.result}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;"/>`;
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      preview.classList.add('active');
+    }
+
+    // ============================================
+    // PDF EXPORT
+    // ============================================
+    
+    function exportToPDF() {
+      const messages = Array.from(document.querySelectorAll('.msg'));
+      
+      if (messages.length === 0) {
+        alert('⚠️ No hay mensajes para exportar');
+        return;
+      }
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Header
+        doc.setFontSize(20);
+        doc.setTextColor(10, 22, 40);
+        doc.text('Chat - Luminom IA', 20, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(74, 85, 104);
+        doc.text(`Usuario: ${currentUser.name || currentUser.email}`, 20, 30);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-CO')}`, 20, 35);
+        doc.text(`Total mensajes: ${messages.length}`, 20, 40);
+        
+        let yPos = 50;
+        
+        messages.forEach((msg, index) => {
+          const isUser = msg.classList.contains('user');
+          const bubble = msg.querySelector('.bubble');
+          const text = bubble.textContent.trim();
+          
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          // Role header
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(isUser ? 201 : 10, isUser ? 168 : 22, isUser ? 76 : 40);
+          doc.text(isUser ? '👤 Usuario' : '🤖 IA', 20, yPos);
+          yPos += 5;
+          
+          // Message content
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(10, 22, 40);
+          const lines = doc.splitTextToSize(text, 170);
+          doc.text(lines, 20, yPos);
+          
+          yPos += (lines.length * 5) + 5;
+        });
+        
+        doc.save(`chat-luminom-${new Date().toISOString().split('T')[0]}.pdf`);
+        showNotification('✅ Chat exportado a PDF exitosamente', 'success');
+      } catch (error) {
+        console.error('Error al exportar PDF:', error);
+        alert('⚠️ Error al exportar. Asegúrate de que jsPDF esté cargado.');
+      }
+    }
+
+    // ============================================
+    // VOICE RECOGNITION
+    // ============================================
+    
+    function toggleVoiceRecording() {
+      if (!isRecording) {
+        startVoiceRecording();
+      } else {
+        stopVoiceRecording();
+      }
+    }
+    
+    function startVoiceRecording() {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('⚠️ Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.');
+        return;
+      }
+      
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => {
+        isRecording = true;
+        document.getElementById('voiceRecording').classList.add('active');
+        document.getElementById('voiceBtn').style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+        document.getElementById('voiceBtn').style.color = 'white';
+        console.log('🎤 Recording started');
+      };
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log('🎤 Recognized:', transcript);
+        document.getElementById('chatInput').value = transcript;
+        stopVoiceRecording();
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('🎤 Error:', event.error);
+        stopVoiceRecording();
+        if (event.error !== 'no-speech') {
+          alert('⚠️ Error en reconocimiento de voz: ' + event.error);
+        }
+      };
+      
+      recognition.onend = () => {
+        stopVoiceRecording();
+      };
+      
+      recognition.start();
+    }
+    
+    function stopVoiceRecording() {
+      if (recognition) {
+        recognition.stop();
+      }
+      isRecording = false;
+      document.getElementById('voiceRecording').classList.remove('active');
+      document.getElementById('voiceBtn').style.background = '';
+      document.getElementById('voiceBtn').style.color = '';
+      console.log('🎤 Recording stopped');
     }
 
     // ============================================
@@ -698,11 +1018,18 @@
           <input type="text" id="studySubject" placeholder="Ej: Cálculo Diferencial" style="width:100%;padding:0.75rem;border:1.5px solid rgba(10,22,40,0.2);border-radius:8px;margin-bottom:1rem;font-size:0.9rem;" />
           
           <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Tiempo disponible:</label>
-          <select id="studyTime" style="width:100%;padding:0.75rem;border:1.5px solid rgba(10,22,40,0.2);border-radius:8px;font-size:0.9rem;">
+          <select id="studyTime" style="width:100%;padding:0.75rem;border:1.5px solid rgba(10,22,40,0.2);border-radius:8px;font-size:0.9rem;margin-bottom:1rem;">
             <option value="1">1 semana</option>
             <option value="2">2 semanas</option>
             <option value="4">1 mes</option>
             <option value="8">2 meses</option>
+          </select>
+          
+          <label style="display:block;margin-bottom:0.5rem;font-weight:600;">Nivel:</label>
+          <select id="studyLevel" style="width:100%;padding:0.75rem;border:1.5px solid rgba(10,22,40,0.2);border-radius:8px;font-size:0.9rem;">
+            <option value="basico">Básico</option>
+            <option value="intermedio">Intermedio</option>
+            <option value="avanzado">Avanzado</option>
           </select>
         `;
         footer.innerHTML = `
@@ -710,17 +1037,11 @@
           <button class="modal-btn modal-btn-primary" onclick="generateStudyPlan()">Generar Plan</button>
         `;
       } else if (featureName === 'library') {
-        title.textContent = '📚 Mi Biblioteca';
-        body.innerHTML = '<p style="text-align:center;color:rgba(10,22,40,0.5);padding:2rem;">Función en desarrollo. Pronto podrás guardar y organizar tus recursos de estudio.</p>';
-        footer.innerHTML = `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cerrar</button>`;
+        loadLibrary();
       } else if (featureName === 'goals') {
-        title.textContent = '🎯 Mis Objetivos';
-        body.innerHTML = '<p style="text-align:center;color:rgba(10,22,40,0.5);padding:2rem;">Función en desarrollo. Pronto podrás establecer y seguir tus objetivos académicos.</p>';
-        footer.innerHTML = `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cerrar</button>`;
+        loadGoals();
       } else if (featureName === 'analytics') {
-        title.textContent = '📊 Análisis de Progreso';
-        body.innerHTML = '<p style="text-align:center;color:rgba(10,22,40,0.5);padding:2rem;">Función en desarrollo. Pronto podrás ver estadísticas de tu progreso académico.</p>';
-        footer.innerHTML = `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cerrar</button>`;
+        loadAnalytics();
       }
       
       modal.classList.add('active');
@@ -729,11 +1050,314 @@
     function closeModal() {
       document.getElementById('featureModal').classList.remove('active');
     }
+    
+    // ============================================
+    // LIBRARY SYSTEM
+    // ============================================
+    
+    function loadLibrary() {
+      const modal = document.getElementById('featureModal');
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+      const footer = document.getElementById('modalFooter');
+      
+      // Load saved resources from localStorage
+      const stored = localStorage.getItem('luminom_library_' + currentUser.userId);
+      savedResources = stored ? JSON.parse(stored) : [];
+      
+      title.textContent = '📚 Mi Biblioteca (' + savedResources.length + ')';
+      
+      if (savedResources.length === 0) {
+        body.innerHTML = `
+          <div style="text-align:center;padding:3rem;color:rgba(10,22,40,0.5);">
+            <div style="font-size:3rem;margin-bottom:1rem;">📚</div>
+            <p>Tu biblioteca está vacía</p>
+            <p style="font-size:0.85rem;margin-top:0.5rem;">Guarda respuestas importantes de la IA para consultarlas después</p>
+          </div>
+        `;
+      } else {
+        body.innerHTML = `
+          <div style="max-height:400px;overflow-y:auto;">
+            ${savedResources.map(r => `
+              <div style="background:rgba(10,22,40,0.05);padding:1rem;border-radius:8px;margin-bottom:0.75rem;border-left:3px solid var(--gold);">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.5rem;">
+                  <strong style="color:var(--navy);">${r.title}</strong>
+                  <button onclick="deleteResource('${r.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.2rem;" title="Eliminar">🗑️</button>
+                </div>
+                <p style="font-size:0.85rem;color:rgba(10,22,40,0.7);line-height:1.5;">${r.content.substring(0, 150)}${r.content.length > 150 ? '...' : ''}</p>
+                <button onclick="viewResource('${r.id}')" style="margin-top:0.5rem;padding:0.4rem 0.8rem;background:var(--gold);color:var(--navy);border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;">Ver completo</button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      
+      footer.innerHTML = `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cerrar</button>`;
+    }
+    
+    function saveToLibrary(content) {
+      const title = prompt('📚 Título para este recurso:', 'Recurso de estudio');
+      if (!title) return;
+      
+      const resource = {
+        id: Date.now().toString(),
+        title,
+        content,
+        savedAt: new Date().toISOString()
+      };
+      
+      savedResources.push(resource);
+      localStorage.setItem('luminom_library_' + currentUser.userId, JSON.stringify(savedResources));
+      
+      showNotification('✅ Recurso guardado en tu biblioteca', 'success');
+    }
+    
+    window.deleteResource = function(id) {
+      if (confirm('¿Eliminar este recurso de tu biblioteca?')) {
+        savedResources = savedResources.filter(r => r.id !== id);
+        localStorage.setItem('luminom_library_' + currentUser.userId, JSON.stringify(savedResources));
+        loadLibrary();
+        showNotification('✅ Recurso eliminado', 'success');
+      }
+    };
+    
+    window.viewResource = function(id) {
+      const resource = savedResources.find(r => r.id === id);
+      if (!resource) return;
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal active';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="modal-title">${resource.title}</div>
+            <button class="modal-close" onclick="this.closest('.modal').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="line-height:1.7;white-space:pre-wrap;">${resource.content}</div>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn modal-btn-secondary" onclick="this.closest('.modal').remove()">Cerrar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    };
+    
+    // ============================================
+    // GOALS SYSTEM
+    // ============================================
+    
+    function loadGoals() {
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+      const footer = document.getElementById('modalFooter');
+      
+      title.textContent = '🎯 Mis Objetivos';
+      
+      const goals = JSON.parse(localStorage.getItem('luminom_goals_' + currentUser.userId) || '[]');
+      
+      if (goals.length === 0) {
+        body.innerHTML = `
+          <div style="text-align:center;padding:3rem;color:rgba(10,22,40,0.5);">
+            <div style="font-size:3rem;margin-bottom:1rem;">🎯</div>
+            <p>No tienes objetivos definidos</p>
+            <p style="font-size:0.85rem;margin-top:0.5rem;">Establece metas académicas y haz seguimiento de tu progreso</p>
+          </div>
+        `;
+        footer.innerHTML = `
+          <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cerrar</button>
+          <button class="modal-btn modal-btn-primary" onclick="addGoal()">➕ Nuevo Objetivo</button>
+        `;
+      } else {
+        body.innerHTML = `
+          <div style="max-height:400px;overflow-y:auto;">
+            ${goals.map(g => `
+              <div style="background:rgba(10,22,40,0.05);padding:1rem;border-radius:8px;margin-bottom:0.75rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <strong style="color:var(--navy);">${g.title}</strong>
+                  <span style="font-size:0.85rem;color:${g.completed ? '#10b981' : '#f59e0b'};">
+                    ${g.completed ? '✅ Completado' : '⏳ En progreso'}
+                  </span>
+                </div>
+                <p style="font-size:0.85rem;color:rgba(10,22,40,0.7);margin-top:0.5rem;">${g.description}</p>
+                ${!g.completed ? `
+                  <button onclick="completeGoal('${g.id}')" style="margin-top:0.75rem;padding:0.4rem 0.8rem;background:var(--gold);color:var(--navy);border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;">
+                    Marcar como completado
+                  </button>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `;
+        footer.innerHTML = `
+          <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cerrar</button>
+          <button class="modal-btn modal-btn-primary" onclick="addGoal()">➕ Nuevo Objetivo</button>
+        `;
+      }
+    }
+    
+    window.addGoal = function() {
+      const title = prompt('🎯 Título del objetivo:');
+      if (!title) return;
+      
+      const description = prompt('📝 Descripción (opcional):') || '';
+      
+      const goals = JSON.parse(localStorage.getItem('luminom_goals_' + currentUser.userId) || '[]');
+      goals.push({
+        id: Date.now().toString(),
+        title,
+        description,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+      
+      localStorage.setItem('luminom_goals_' + currentUser.userId, JSON.stringify(goals));
+      loadGoals();
+      showNotification('✅ Objetivo agregado', 'success');
+    };
+    
+    window.completeGoal = function(id) {
+      const goals = JSON.parse(localStorage.getItem('luminom_goals_' + currentUser.userId) || '[]');
+      const goal = goals.find(g => g.id === id);
+      if (goal) {
+        goal.completed = true;
+        goal.completedAt = new Date().toISOString();
+        localStorage.setItem('luminom_goals_' + currentUser.userId, JSON.stringify(goals));
+        loadGoals();
+        showNotification('🎉 ¡Objetivo completado!', 'success');
+      }
+    };
+    
+    // ============================================
+    // ANALYTICS SYSTEM
+    // ============================================
+    
+    function loadAnalytics() {
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+      const footer = document.getElementById('modalFooter');
+      
+      title.textContent = '📊 Análisis de Progreso';
+      
+      const totalQuestions = questionCount;
+      const totalChats = chatHistory.length;
+      const totalGoals = JSON.parse(localStorage.getItem('luminom_goals_' + currentUser.userId) || '[]').length;
+      const completedGoals = JSON.parse(localStorage.getItem('luminom_goals_' + currentUser.userId) || '[]').filter(g => g.completed).length;
+      const librarySize = savedResources.length;
+      
+      // Calculate streak (días consecutivos)
+      const today = new Date().toDateString();
+      const lastActivity = localStorage.getItem('luminom_last_activity_' + currentUser.userId);
+      let streak = parseInt(localStorage.getItem('luminom_streak_' + currentUser.userId) || '0');
+      
+      body.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem;">
+          <div style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:1.5rem;border-radius:12px;text-align:center;">
+            <div style="font-size:2rem;font-weight:700;">${totalQuestions}</div>
+            <div style="font-size:0.85rem;opacity:0.9;">Preguntas realizadas</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;padding:1.5rem;border-radius:12px;text-align:center;">
+            <div style="font-size:2rem;font-weight:700;">${totalChats}</div>
+            <div style="font-size:0.85rem;opacity:0.9;">Conversaciones</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;padding:1.5rem;border-radius:12px;text-align:center;">
+            <div style="font-size:2rem;font-weight:700;">${librarySize}</div>
+            <div style="font-size:0.85rem;opacity:0.9;">Recursos guardados</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:1.5rem;border-radius:12px;text-align:center;">
+            <div style="font-size:2rem;font-weight:700;">${completedGoals}/${totalGoals}</div>
+            <div style="font-size:0.85rem;opacity:0.9;">Objetivos completados</div>
+          </div>
+        </div>
+        
+        <div style="background:rgba(10,22,40,0.05);padding:1.5rem;border-radius:12px;text-align:center;">
+          <div style="font-size:3rem;margin-bottom:0.5rem;">🔥</div>
+          <div style="font-size:1.8rem;font-weight:700;color:var(--navy);">${streak} días</div>
+          <div style="font-size:0.85rem;color:rgba(10,22,40,0.6);">Racha de estudio consecutiva</div>
+        </div>
+        
+        <div style="margin-top:1.5rem;padding:1rem;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05));border-left:3px solid var(--gold);border-radius:8px;">
+          <strong style="color:var(--navy);">💡 Tip de productividad:</strong>
+          <p style="font-size:0.85rem;color:rgba(10,22,40,0.7);margin-top:0.5rem;">
+            ${getTip()}
+          </p>
+        </div>
+      `;
+      
+      footer.innerHTML = `<button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cerrar</button>`;
+    }
+    
+    function getTip() {
+      const tips = [
+        'Estudia en sesiones de 25 minutos con descansos de 5 minutos (técnica Pomodoro).',
+        'Enseñarle a alguien más lo que aprendiste ayuda a reforzar tu conocimiento.',
+        'Toma notas a mano - estudios muestran que mejora la retención.',
+        'Establece objetivos específicos y medibles para cada sesión de estudio.',
+        'Estudia en el mismo lugar y hora para crear un hábito.',
+        'Haz ejercicio antes de estudiar - mejora la concentración y memoria.',
+        'Duerme bien - el sueño consolida la memoria y el aprendizaje.',
+        'Usa mapas mentales para conectar conceptos y mejorar la comprensión.'
+      ];
+      return tips[Math.floor(Math.random() * tips.length)];
+    }
+    
+    // ============================================
+    // NOTIFICATIONS
+    // ============================================
+    
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      const bgColors = {
+        success: 'linear-gradient(135deg, #10b981, #059669)',
+        error: 'linear-gradient(135deg, #ef4444, #dc2626)',
+        info: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+        warning: 'linear-gradient(135deg, #f59e0b, #d97706)'
+      };
+      
+      notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: ${bgColors[type]};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        z-index: 10001;
+        animation: slideInRight 0.3s ease-out;
+        font-weight: 600;
+        max-width: 350px;
+      `;
+      
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+    
+    // Add animations
+    const animStyle = document.createElement('style');
+    animStyle.textContent = `
+      @keyframes slideInRight {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(400px); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(animStyle);
 
 
     async function generateStudyPlan() {
       const subject = document.getElementById('studySubject').value.trim();
       const weeks = document.getElementById('studyTime').value;
+      const level = document.getElementById('studyLevel').value;
       
       if (!subject) {
         alert('⚠️ Por favor ingresa una materia o tema');
@@ -743,7 +1367,18 @@
       closeModal();
       
       // Add user message
-      const userMessage = `Genera un plan de estudio detallado para: ${subject}, con un tiempo de ${weeks} semana(s)`;
+      const userMessage = `Genera un plan de estudio detallado y estructurado para: ${subject}
+      
+Tiempo disponible: ${weeks} semana(s)
+Nivel: ${level}
+
+Por favor incluye:
+- División por semanas con objetivos específicos
+- Temas a cubrir en cada semana
+- Ejercicios o actividades recomendadas
+- Recursos de estudio sugeridos
+- Tips para maximizar el aprendizaje`;
+      
       document.getElementById('chatInput').value = userMessage;
       
       // Send message
@@ -763,6 +1398,10 @@
       // Load user profile
       loadUserProfile();
       
+      // Load question counter
+      questionCount = parseInt(localStorage.getItem('luminom_question_count_' + currentUser.userId) || '0');
+      document.getElementById('questionCount').textContent = questionCount;
+      
       // Set welcome time
       const welcomeTime = document.getElementById('welcomeTime');
       if (welcomeTime) {
@@ -772,8 +1411,14 @@
       // Load chat history
       await loadChatHistory();
       
+      // Update chat count
+      document.getElementById('chatCount').textContent = chatHistory.length;
+      
       // Focus input
       document.getElementById('chatInput').focus();
+      
+      // Show welcome notification
+      showNotification('👋 ¡Bienvenido de nuevo a Luminom IA!', 'info');
       
       console.log('✅ Tutor initialized successfully');
     }
