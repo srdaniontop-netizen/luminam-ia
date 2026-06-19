@@ -218,7 +218,7 @@
 
           // Guardar sesión local
           const session = { userId: user.uid, name, email, carrera };
-          localStorage.setItem('luminom_session', JSON.stringify(session));
+          sessionStorage.setItem('luminom_session', JSON.stringify(session));
 
           return { ok: true, user: session };
         } catch (error) {
@@ -259,7 +259,7 @@
               carrera: userData.carrera 
             };
             
-            localStorage.setItem('luminom_session', JSON.stringify(session));
+            sessionStorage.setItem('luminom_session', JSON.stringify(session));
             console.log('✅ Sesión guardada:', session);
             return { ok: true, user: session };
           } else {
@@ -312,13 +312,13 @@
       },
 
       logout() { 
-        localStorage.removeItem('luminom_session'); 
+        sessionStorage.removeItem('luminom_session'); 
         window.location.href = 'index.html'; 
       },
 
       getSession() { 
         try { 
-          return JSON.parse(localStorage.getItem('luminom_session')); 
+          return JSON.parse(sessionStorage.getItem('luminom_session')); 
         } catch { 
           return null; 
         } 

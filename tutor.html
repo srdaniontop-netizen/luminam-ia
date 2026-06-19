@@ -838,7 +838,7 @@
     // ============================================
     // LOGOUT
     // ============================================
-    function logout() {
+    window.logout = function() {
       if (confirm('¿Estás seguro de cerrar sesión?')) {
         sessionStorage.removeItem('luminom_session');
         window.location.href = 'login.html';
@@ -876,7 +876,7 @@
     // ============================================
     // SEND MESSAGE
     // ============================================
-    async function sendMessage() {
+    window.sendMessage = async function() {
       const input = document.getElementById('chatInput');
       const message = input.value.trim();
       
@@ -1072,7 +1072,7 @@
     // ============================================
     // LOAD SPECIFIC CHAT
     // ============================================
-    async function loadChat(chatId) {
+    window.loadChat = async function(chatId) {
       try {
         const doc = await db.collection('chats').doc(chatId).get();
         
@@ -1102,7 +1102,7 @@
     // ============================================
     // NEW CHAT
     // ============================================
-    function newChat() {
+    window.newChat = function() {
       currentChatId = null;
       const messagesContainer = document.getElementById('messages');
       messagesContainer.innerHTML = '';
@@ -1117,7 +1117,7 @@
     // ============================================
     // QUICK ACTIONS
     // ============================================
-    function quickAction(type) {
+    window.quickAction = function(type) {
       const prompts = {
         plan: 'Genera un plan de estudio detallado para: ',
         help: 'Necesito ayuda con esta tarea: ',
@@ -1137,7 +1137,7 @@
     // ============================================
     // EXPORT TO PDF
     // ============================================
-    function exportToPDF() {
+    window.exportToPDF = function() {
       const messages = Array.from(document.querySelectorAll('.msg'));
       
       if (messages.length === 0) {
@@ -1191,7 +1191,7 @@
     // ============================================
     // FILE UPLOAD
     // ============================================
-    async function handleFileUpload(event) {
+    window.handleFileUpload = async function(event) {
       const file = event.target.files[0];
       if (!file) return;
       
@@ -1232,7 +1232,7 @@
     // ============================================
     // VOICE RECOGNITION
     // ============================================
-    function toggleVoice() {
+    window.toggleVoice = function() {
       if (!isRecording) {
         startVoice();
       } else {
