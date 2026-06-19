@@ -78,20 +78,12 @@
     .msg-time{font-size:0.65rem;color:rgba(255,255,255,0.28);margin-top:0.25rem;padding:0 0.25rem;align-self:flex-end;}
     .msg-col{display:flex;flex-direction:column;max-width:75%;}
     .msg.user .msg-col{align-items:flex-end;}
-    
-    /* Welcome */
-    .welcome{text-align:center;padding:3rem 2rem;max-width:700px;margin:0 auto;}
-    .welcome h2{font-family:var(--font-display);font-size:2.2rem;font-weight:700;margin-bottom:1rem;color:var(--white);}
-    .welcome h2 .gold{color:var(--gold);font-style:italic;}
-    .welcome p{font-size:1rem;color:var(--text-secondary);margin-bottom:2rem;}
-    .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;}
-    .quick-card{background:var(--navy-mid);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.2rem;text-align:left;cursor:pointer;transition:var(--t);position:relative;overflow:hidden;}
-    .quick-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(201,168,76,0.1),transparent);transform:translateX(-100%);transition:transform 0.3s;}
-    .quick-card:hover{border-color:var(--border-gold);box-shadow:var(--shadow-md);transform:translateY(-5px) scale(1.02);}
-    .quick-card:hover::before{transform:translateX(0);}
-    .quick-card:active{transform:translateY(-2px) scale(0.98);}
-    .quick-icon{font-size:1.6rem;margin-bottom:0.5rem;display:block;}
-    .quick-title{font-weight:600;font-size:0.9rem;color:var(--white);}
+    /* WELCOME SCREEN */
+    .welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;}
+    .wcard{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:1rem;cursor:pointer;transition:var(--t);text-align:left;}
+    .wcard:hover{background:rgba(201,168,76,0.1);border-color:var(--border-gold);transform:translateY(-2px);}
+    /* TYPING */
+    @keyframes ty{0%,100%{transform:translateY(0);opacity:0.4;}50%{transform:translateY(-5px);opacity:1;}}
     
     /* Input */
     .input-area{padding:1.5rem 2rem;background:var(--navy-mid);border-top:1px solid var(--border);}
@@ -155,113 +147,134 @@
 </head>
 <body>
 
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <a href="index.html" class="logo">
+      <span class="logo-mark">L</span>
+      <span class="logo-text">Luminom <em>IA</em></span>
+    </a>
+  </div>
+  <div class="topbar-right">
+    <a href="index.html" class="btn-home">← Inicio</a>
+    <div class="user-pill">
+      <span class="user-dot"></span>
+      <span id="topbarName">...</span>
+    </div>
+    <button class="btn-logout" onclick="Auth.logout()">Salir</button>
+  </div>
+</div>
 
-  <nav class="nav">
-    <div class="nav-inner">
-      <a href="index.html" class="logo">
-        <span class="logo-mark">L</span>
-        <span class="logo-text">Luminom <em>IA</em></span>
-      </a>
-      <div class="nav-actions">
-        <div class="nav-user">
-          <span class="premium-badge free" id="planBadge">Gratis</span>
-          <span class="nav-user-name" id="userName">Cargando...</span>
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Perfil</div>
+      <div class="profile-row">
+        <div class="avatar" id="sideAvatar">?</div>
+        <div>
+          <div class="profile-name" id="sideName">Cargando...</div>
+          <div class="profile-carrera" id="sideCarrera"></div>
         </div>
-        <button class="btn-nav" id="themeToggle" title="Cambiar tema">🌙</button>
-        <button class="btn-nav" id="logoutBtn">Salir</button>
       </div>
     </div>
-  </nav>
 
-  <div class="chat-layout">
-    <aside class="sidebar">
-      <button class="sidebar-btn" id="newChatBtn">+ Nueva conversación</button>
-      
-      <!-- Botón de Plan de Estudio -->
-      <button class="sidebar-btn-special" id="studyPlanBtn">
-        📚 Generar Plan de Estudio
-      </button>
-      
-      <!-- Botón de Exportar PDF -->
-      <button class="sidebar-btn-special" id="exportPDFBtn" style="background:linear-gradient(135deg,#10b981,#059669);">
-        📄 Exportar Chat a PDF
-      </button>
-      
-      <!-- Estadísticas de uso -->
-      <div id="userStats" style="background:var(--navy-light);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;display:none;">
-        <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.5rem;">📊 Tu progreso</div>
-        <div style="font-size:0.9rem;color:var(--white);"><strong id="statsQuestions">0</strong> preguntas este mes</div>
-        <div style="font-size:0.9rem;color:var(--white);margin-top:0.25rem;">🔥 Racha: <strong id="statsStreak">0</strong> días</div>
+    <div class="sidebar-section">
+      <button class="new-chat-btn" onclick="newChat()">+ Nueva conversación</button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Especialidades</div>
+      <div class="tags">
+        <span class="tag">Matemáticas</span>
+        <span class="tag">Física</span>
+        <span class="tag">Programación</span>
+        <span class="tag">Química</span>
+        <span class="tag">Estadística</span>
+        <span class="tag">Derecho</span>
+        <span class="tag">Economía</span>
+        <span class="tag">Salud</span>
       </div>
-      
-      <!-- Contador visual de preguntas -->
-      <div id="questionCounter" style="display:none;" class="question-counter">
-        <div class="counter-label">Preguntas hoy</div>
-        <div class="counter-number" id="counterNumber">0/10</div>
-        <div class="counter-bar">
-          <div class="counter-bar-fill" id="counterBarFill" style="width:0%"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Preguntas rápidas</div>
+      <div class="quick-list">
+        <button class="qbtn" onclick="sendQuick('Explícame qué es una derivada con un ejemplo de la vida real')">¿Qué es una derivada?</button>
+        <button class="qbtn" onclick="sendQuick('¿Cómo funciona la herencia en programación orientada a objetos? Dame un ejemplo en Python')">Herencia en POO</button>
+        <button class="qbtn" onclick="sendQuick('Explícame la ley de la oferta y la demanda con un ejemplo colombiano')">Oferta y demanda</button>
+        <button class="qbtn" onclick="sendQuick('¿Cuáles son los principios fundamentales del derecho procesal colombiano?')">Derecho procesal</button>
+        <button class="qbtn" onclick="sendQuick('¿Cómo hago para memorizar mejor para un parcial? Dame técnicas de estudio efectivas')">Técnicas de estudio</button>
+        <button class="qbtn" onclick="sendQuick('Explícame el teorema de Bayes con un ejemplo sencillo')">Teorema de Bayes</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CHAT AREA -->
+  <div class="chat-area">
+    <div class="chat-header">
+      <div class="ch-avatar">L</div>
+      <div>
+        <div class="ch-name">Luminom IA</div>
+        <div class="ch-status"><span class="ch-dot"></span>En línea · Listo para ayudarte</div>
+      </div>
+      <div class="token-info" id="tokenInfo">0 mensajes en sesión</div>
+    </div>
+
+    <!-- WELCOME (visible al inicio) -->
+    <div class="welcome" id="welcomeScreen">
+      <div class="welcome-icon" style="width:80px;height:80px;background:rgba(201,168,76,0.1);border:1px solid var(--border-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--gold);margin:0 auto 1.5rem;">L</div>
+      <h2 style="font-family:var(--font-display);font-size:1.8rem;font-weight:700;margin-bottom:0.75rem;">¡Hola, <span id="welcomeName">estudiante</span>!</h2>
+      <p style="font-size:0.92rem;color:rgba(255,255,255,0.55);max-width:400px;line-height:1.72;margin-bottom:2rem;margin-left:auto;margin-right:auto;">Soy Luminom IA, tu tutor universitario. Pregúntame cualquier cosa sobre tus materias y te explico de forma clara.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;max-width:440px;width:100%;margin:0 auto;">
+        <div class="wcard" onclick="sendQuick('¿Puedes ayudarme a entender integrales definidas? No entiendo el concepto')">
+          <div style="font-size:1.3rem;margin-bottom:0.4rem;">∫</div>
+          <div style="font-size:0.82rem;font-weight:600;margin-bottom:0.2rem;">Resolver ejercicios</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.45);line-height:1.4;">Paso a paso con explicación</div>
+        </div>
+        <div class="wcard" onclick="sendQuick('Tengo parcial mañana de estructuras de datos, ¿puedes hacerme un resumen de lo más importante?')">
+          <div style="font-size:1.3rem;margin-bottom:0.4rem;">📋</div>
+          <div style="font-size:0.82rem;font-weight:600;margin-bottom:0.2rem;">Resumen para parcial</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.45);line-height:1.4;">Los puntos clave de la materia</div>
+        </div>
+        <div class="wcard" onclick="sendQuick('¿Puedes explicarme este concepto como si tuviera 10 años?: la segunda ley de la termodinámica')">
+          <div style="font-size:1.3rem;margin-bottom:0.4rem;">💡</div>
+          <div style="font-size:0.82rem;font-weight:600;margin-bottom:0.2rem;">Explicación simple</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.45);line-height:1.4;">Sin jerga técnica</div>
+        </div>
+        <div class="wcard" onclick="sendQuick('Ayúdame a crear un plan de estudio para esta semana. Tengo 3 materias difíciles.')">
+          <div style="font-size:1.3rem;margin-bottom:0.4rem;">📅</div>
+          <div style="font-size:0.82rem;font-weight:600;margin-bottom:0.2rem;">Plan de estudio</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.45);line-height:1.4;">Organiza tu semana</div>
         </div>
       </div>
-      
-      <!-- Banner de límite de preguntas para usuarios gratuitos -->
-      <div id="limitBanner" style="display:none;"></div>
-      
-      <h3>Historial</h3>
-      <div id="historyList">
-        <div class="history-item">Sin conversaciones previas</div>
-      </div>
-    </aside>
+    </div>
 
-    <div class="chat-area">
-      <div class="messages" id="messages">
-        <div class="welcome" id="welcome">
-          <h2>Hola, <span class="gold" id="welcomeName">estudiante</span> 👋</h2>
-          <p>Soy tu tutor con IA. Puedo ayudarte con cualquier materia universitaria. Elige un tema o escribe tu pregunta:</p>
-          <div class="quick-grid">
-            <div class="quick-card" data-quick-prompt="Explícame derivadas con un ejemplo paso a paso">
-              <span class="quick-icon">∫</span>
-              <div class="quick-title">Cálculo</div>
-            </div>
-            <div class="quick-card" data-quick-prompt="¿Cómo funciona un bucle for en Python?">
-              <span class="quick-icon">💻</span>
-              <div class="quick-title">Programación</div>
-            </div>
-            <div class="quick-card" data-quick-prompt="Explica la Segunda Ley de Newton">
-              <span class="quick-icon">⚛</span>
-              <div class="quick-title">Física</div>
-            </div>
-            <div class="quick-card" data-quick-prompt="¿Qué es oferta y demanda?">
-              <span class="quick-icon">📊</span>
-              <div class="quick-title">Economía</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- MESSAGES -->
+    <div class="messages" id="messagesDiv" style="display:none;"></div>
 
-      <div class="input-area">
-        <div class="input-wrapper">
-          <!-- Botón para adjuntar archivos -->
-          <label for="fileInput" class="btn-attach" title="Adjuntar imagen o archivo">
-            📎
-          </label>
-          <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
-          
-          <!-- Botón de voz -->
-          <button class="btn-attach" id="voiceBtn" title="Grabar voz">🎤</button>
-          
-          <!-- Preview de archivo adjunto -->
-          <div id="filePreview" style="display:none;"></div>
-          
-          <textarea 
-            id="userInput" 
-            placeholder="Escribe tu pregunta aquí o adjunta una imagen..."
-            rows="1"
-          ></textarea>
-          <button class="btn-send" id="sendBtn">Enviar</button>
-        </div>
+    <!-- TYPING -->
+    <div style="display:none;align-items:center;gap:4px;padding:0 0 0 1.5rem;" id="typing">
+      <span style="width:7px;height:7px;background:rgba(255,255,255,0.35);border-radius:50%;animation:ty 1.2s infinite;"></span>
+      <span style="width:7px;height:7px;background:rgba(255,255,255,0.35);border-radius:50%;animation:ty 1.2s 0.2s infinite;"></span>
+      <span style="width:7px;height:7px;background:rgba(255,255,255,0.35);border-radius:50%;animation:ty 1.2s 0.4s infinite;"></span>
+    </div>
+
+    <!-- INPUT -->
+    <div style="border-top:1px solid rgba(255,255,255,0.07);padding:1rem 1.25rem;flex-shrink:0;background:rgba(0,0,0,0.15);">
+      <div style="display:flex;gap:0.75rem;align-items:flex-end;">
+        <textarea style="flex:1;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.1);color:var(--white);padding:0.8rem 1rem;border-radius:14px;font-size:0.88rem;outline:none;resize:none;max-height:140px;min-height:44px;overflow-y:auto;transition:var(--t);line-height:1.5;" id="chatInput" placeholder="Escribe tu pregunta académica aquí..." rows="1"></textarea>
+        <button style="width:44px;height:44px;background:var(--gold);color:var(--navy);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--t);" id="sendBtn" onclick="sendMessage()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </div>
+      <p style="font-size:0.68rem;color:rgba(255,255,255,0.22);margin-top:0.5rem;text-align:center;">Presiona Enter para enviar, Shift+Enter para salto de línea.</p>
     </div>
   </div>
+
+</div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -340,7 +353,11 @@
 
     // Mostrar nombre del usuario
     const session = Auth.getSession();
-    document.getElementById('userName').textContent = session.name;
+    document.getElementById('topbarName').textContent = session.name;
+    document.getElementById('sideName').textContent = session.name;
+    document.getElementById('sideCarrera').textContent = session.carrera || 'Carrera no especificada';
+    document.getElementById('sideAvatar').textContent = session.name[0].toUpperCase();
+    document.getElementById('welcomeName').textContent = session.name;
 
     // ========================================
     // SISTEMA DE SUSCRIPCIÓN Y LÍMITES
@@ -1054,22 +1071,23 @@ Formato del plan:
 
 
     function hideWelcome() {
-      const welcome = document.getElementById('welcome');
+      const welcome = document.getElementById('welcomeScreen');
       if (welcome) welcome.style.display = 'none';
+      document.getElementById('messagesDiv').style.display = 'flex';
     }
 
     function addMessage(content, isUser) {
       hideWelcome();
-      const messagesDiv = document.getElementById('messages');
+      const messagesDiv = document.getElementById('messagesDiv');
       const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+      messageDiv.className = `msg ${isUser ? 'user' : 'bot'}`;
       
       const avatar = document.createElement('div');
-      avatar.className = 'avatar';
+      avatar.className = `msg-av ${isUser ? 'user' : 'bot'}`;
       avatar.textContent = isUser ? session.name[0].toUpperCase() : 'L';
       
       const bubble = document.createElement('div');
-      bubble.className = 'bubble';
+      bubble.className = 'bubble ' + (isUser ? 'user' : 'bot');
       bubble.innerHTML = formatMessage(content);
       
       messageDiv.appendChild(avatar);
@@ -1096,23 +1114,11 @@ Formato del plan:
 
     function showTyping() {
       hideWelcome();
-      const messagesDiv = document.getElementById('messages');
-      const typingDiv = document.createElement('div');
-      typingDiv.id = 'typing';
-      typingDiv.className = 'message bot';
-      typingDiv.innerHTML = `
-        <div class="avatar">L</div>
-        <div class="bubble typing-dots">
-          <span></span><span></span><span></span>
-        </div>
-      `;
-      messagesDiv.appendChild(typingDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      document.getElementById('typing').style.display = 'flex';
     }
 
     function hideTyping() {
-      const typing = document.getElementById('typing');
-      if (typing) typing.remove();
+      document.getElementById('typing').style.display = 'none';
     }
 
     async function callGroqAPI(userMessage) {
@@ -1188,7 +1194,7 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
     }
 
     async function sendMessage() {
-      const input = document.getElementById('userInput');
+      const input = document.getElementById('chatInput');
       const message = input.value.trim();
       
       if (!message) return;
@@ -1269,42 +1275,25 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       conversationHistory = [];
       currentChatId = null;
       
-      document.getElementById('messages').innerHTML = `
-        <div class="welcome" id="welcome">
-          <h2>Hola, <span class="gold" id="welcomeName">${session.name}</span> 👋</h2>
-          <p>Soy tu tutor con IA. Puedo ayudarte con cualquier materia universitaria. Elige un tema o escribe tu pregunta:</p>
-          <div class="quick-grid">
-            <div class="quick-card" data-quick-prompt="Explícame derivadas con un ejemplo paso a paso">
-              <span class="quick-icon">∫</span>
-              <div class="quick-title">Cálculo</div>
-            </div>
-            <div class="quick-card" data-quick-prompt="¿Cómo funciona un bucle for en Python?">
-              <span class="quick-icon">💻</span>
-              <div class="quick-title">Programación</div>
-            </div>
-            <div class="quick-card" data-quick-prompt="Explica la Segunda Ley de Newton">
-              <span class="quick-icon">⚛</span>
-              <div class="quick-title">Física</div>
-            </div>
-            <div class="quick-card" data-quick-prompt="¿Qué es oferta y demanda?">
-              <span class="quick-icon">📊</span>
-              <div class="quick-title">Economía</div>
-            </div>
-          </div>
-        </div>
-      `;
+      document.getElementById('messagesDiv').innerHTML = '';
+      document.getElementById('messagesDiv').style.display = 'none';
+      document.getElementById('welcomeScreen').style.display = 'flex';
       
       loadChatHistory();
-      document.getElementById('userInput').focus();
+      document.getElementById('chatInput').focus();
     }
 
     // Cargar historial al iniciar
     loadChatHistory();
 
     function sendQuick(question) {
-      document.getElementById('userInput').value = question;
+      document.getElementById('chatInput').value = question;
       sendMessage();
     }
+
+    // Hacer funciones globales
+    window.sendQuick = sendQuick;
+    window.newChat = newChat;
 
     async function saveCurrentChat() {
       if (conversationHistory.length === 0) return;
@@ -1566,106 +1555,23 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
     window.sendQuick = sendQuick;
 
     // Event listeners (en lugar de onclick en HTML)
-    document.getElementById('logoutBtn').addEventListener('click', () => Auth.logout());
-    document.getElementById('newChatBtn').addEventListener('click', newChat);
     document.getElementById('sendBtn').addEventListener('click', sendMessage);
     
     // Enter para enviar
-    document.getElementById('userInput').addEventListener('keypress', (e) => {
+    document.getElementById('chatInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
     });
 
-    // Event delegation para quick cards (funcionan incluso cuando se recrean)
-    document.getElementById('messages').addEventListener('click', (e) => {
-      const quickCard = e.target.closest('.quick-card');
-      if (quickCard) {
-        const prompt = quickCard.getAttribute('data-quick-prompt');
-        if (prompt) {
-          sendQuick(prompt);
-        }
-      }
-    });
-
     // Auto-resize textarea
-    document.getElementById('userInput').addEventListener('input', function() {
+    document.getElementById('chatInput').addEventListener('input', function() {
       this.style.height = 'auto';
       this.style.height = Math.min(this.scrollHeight, 150) + 'px';
     });
 
-    // ========================================
-    // SKELETON LOADING SCREENS
-    // ========================================
-    
-    // Mostrar skeleton screens para mensajes
-    function showMessagesSkeleton() {
-      const messagesDiv = document.getElementById('messages');
-      messagesDiv.innerHTML = `
-        <div class="skeleton-message">
-          <div class="skeleton-avatar"></div>
-          <div class="skeleton-bubble">
-            <div class="skeleton-line long"></div>
-            <div class="skeleton-line medium"></div>
-            <div class="skeleton-line short"></div>
-          </div>
-        </div>
-        <div class="skeleton-message" style="flex-direction:row-reverse;">
-          <div class="skeleton-avatar"></div>
-          <div class="skeleton-bubble">
-            <div class="skeleton-line medium"></div>
-            <div class="skeleton-line long"></div>
-          </div>
-        </div>
-        <div class="skeleton-message">
-          <div class="skeleton-avatar"></div>
-          <div class="skeleton-bubble">
-            <div class="skeleton-line long"></div>
-            <div class="skeleton-line long"></div>
-            <div class="skeleton-line short"></div>
-          </div>
-        </div>
-      `;
-    }
-    
-    // Aplicar skeleton screens al cargar chat
-    window.loadChat = async function(chatId) {
-      try {
-        // Mostrar skeleton mientras carga
-        showMessagesSkeleton();
-        
-        // Cargar desde Firebase
-        const chatDoc = await db.collection('chats').doc(chatId).get();
-        
-        if (!chatDoc.exists) {
-          console.log('⚠️ Chat no encontrado');
-          newChat();
-          return;
-        }
-        
-        const chat = chatDoc.data();
-        conversationHistory = chat.messages || [];
-        currentChatId = chatId;
-        
-        // Renderizar mensajes reales
-        const messagesDiv = document.getElementById('messages');
-        messagesDiv.innerHTML = '';
-        
-        conversationHistory.forEach(msg => {
-          addMessage(msg.content, msg.role === 'user');
-        });
-        
-        console.log(`✅ Chat cargado: ${conversationHistory.length} mensajes`);
-      } catch (error) {
-        console.error('❌ Error al cargar chat:', error);
-        newChat();
-      }
-    };
-    
-    console.log('✅ Skeleton loading screens habilitadas');
-
-    document.getElementById('userInput').focus();
+    document.getElementById('chatInput').focus();
   </script>
 </body>
 </html>
