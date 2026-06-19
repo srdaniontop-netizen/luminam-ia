@@ -285,6 +285,11 @@
   <!-- jsPDF para exportar a PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
+  <!-- Funcionalidades Avanzadas (3 partes) -->
+  <script src="advanced-features.js"></script>
+  <script src="advanced-features-2.js"></script>
+  <script src="advanced-features-3.js"></script>
+  
   <script>
     // Configurar PDF.js worker
     if (typeof pdfjsLib !== 'undefined') {
@@ -1253,6 +1258,11 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       stats.totalQuestions = (stats.totalQuestions || 0) + 1;
       localStorage.setItem('luminom_stats', JSON.stringify(stats));
       
+      // Verificar logros desbloqueados
+      if (typeof checkAndUnlockAchievements !== 'undefined') {
+        setTimeout(checkAndUnlockAchievements, 500);
+      }
+      
       if (conversationHistory.length > 20) {
         conversationHistory = conversationHistory.slice(-20);
       }
@@ -1401,22 +1411,39 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
           });
         });
         
+        // Filtrar por favoritos si está activo
+        let filteredChats = userChats;
+        if (typeof favoritesFilter !== 'undefined' && favoritesFilter === 'favorites') {
+          filteredChats = userChats.filter(chat => chat.isFavorite === true);
+        }
+        
         // Ordenar en JavaScript en lugar de Firestore
-        userChats.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        filteredChats.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
         
-        console.log(`✅ Cargados ${userChats.length} chats desde Firebase`);
+        console.log(`✅ Cargados ${filteredChats.length} chats desde Firebase`);
         
-        if (userChats.length === 0) {
-          historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
+        if (filteredChats.length === 0) {
+          const message = favoritesFilter === 'favorites' 
+            ? 'No tienes chats favoritos aún' 
+            : 'Sin conversaciones previas';
+          historyList.innerHTML = `<div class="history-item">${message}</div>`;
           return;
         }
         
-        historyList.innerHTML = userChats.map(chat => `
-          <div class="history-item" onclick="loadChat('${chat.id}')">
-            <div style="font-weight:600;margin-bottom:0.2rem;color:var(--navy);">${chat.title}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted);">${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</div>
-          </div>
-        `).join('');
+        historyList.innerHTML = filteredChats.map(chat => {
+          const isFav = chat.isFavorite || false;
+          return `
+            <div class="history-item" onclick="loadChat('${chat.id}')">
+              <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.2rem;">
+                <div style="font-weight:600;color:var(--navy);flex:1;">${chat.title}</div>
+                <span class="favorite-star" onclick="toggleFavorite('${chat.id}', event)" title="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                  ${isFav ? '⭐' : '☆'}
+                </span>
+              </div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</div>
+            </div>
+          `;
+        }).join('');
       } catch (error) {
         console.error('❌ Error al cargar historial de Firebase:', error);
         console.error('Código de error:', error.code);
