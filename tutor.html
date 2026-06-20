@@ -42,6 +42,14 @@
     .premium-badge{display:inline-flex;align-items:center;gap:0.4rem;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy);padding:0.35rem 0.9rem;border-radius:100px;font-size:0.75rem;font-weight:700;letter-spacing:0.3px;}
     .premium-badge.free{background:#6b7280;color:white;}
     
+    /* Question Counter */
+    .question-counter{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;text-align:center;}
+    .counter-number{font-family:var(--font-display);font-size:2.5rem;font-weight:700;color:var(--gold);margin:0.5rem 0;}
+    .counter-label{font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.5rem;}
+    .counter-bar{width:100%;height:6px;background:rgba(201,168,76,0.2);border-radius:10px;overflow:hidden;margin-top:0.5rem;}
+    .counter-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width 0.3s ease;border-radius:10px;}
+    .counter-bar-fill.warning{background:linear-gradient(90deg,#f59e0b,#ef4444);}
+    
     /* Question Limit Banner */
     .limit-banner{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#78350f;padding:0.7rem 1.2rem;border-radius:var(--radius-sm);margin-bottom:1rem;font-size:0.85rem;text-align:center;font-weight:600;box-shadow:var(--shadow-sm);}
     .limit-banner.warning{background:linear-gradient(135deg,#f87171,#ef4444);color:white;}
@@ -53,7 +61,10 @@
     .sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);padding:1.5rem;overflow-y:auto;}
     .sidebar h3{font-family:var(--font-display);font-size:1rem;margin-bottom:1rem;color:var(--navy);}
     .sidebar-btn{width:100%;background:var(--gold);color:var(--navy);padding:0.75rem;border-radius:var(--radius-sm);border:none;font-weight:600;cursor:pointer;transition:var(--t);margin-bottom:1.5rem;}
-    .sidebar-btn:hover{background:var(--gold-light);}
+    .sidebar-btn:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 4px 12px rgba(201,168,76,0.3);}
+    
+    .sidebar-btn-special{width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:0.75rem;border-radius:var(--radius-sm);border:none;font-weight:600;cursor:pointer;transition:var(--t);margin-bottom:1rem;box-shadow:0 4px 12px rgba(102,126,234,0.3);}
+    .sidebar-btn-special:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(102,126,234,0.5);}
     .history-item{padding:0.65rem;background:var(--off-white);border-radius:var(--radius-sm);margin-bottom:0.5rem;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;transition:var(--t);}
     .history-item:hover{background:rgba(201,168,76,0.1);}
 
@@ -67,13 +78,15 @@
     .messages::-webkit-scrollbar-thumb:hover{background:rgba(201,168,76,0.5);}
     
     /* Messages */
-    .message{display:flex;gap:1rem;align-items:flex-start;animation:slideIn 0.4s ease;}
-    @keyframes slideIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    .message{display:flex;gap:1rem;align-items:flex-start;animation:slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);}
+    @keyframes slideIn{from{opacity:0;transform:translateY(30px) scale(0.95);}to{opacity:1;transform:translateY(0) scale(1);}}
     .message.user{flex-direction:row-reverse;}
-    .avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.9rem;flex-shrink:0;}
-    .message.bot .avatar{background:var(--gold);color:var(--navy);}
-    .message.user .avatar{background:var(--navy);color:var(--gold);}
-    .bubble{max-width:65%;padding:1.2rem 1.5rem;border-radius:var(--radius-md);line-height:1.7;box-shadow:var(--shadow-sm);}
+    .avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.9rem;flex-shrink:0;animation:popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);}
+    @keyframes popIn{from{transform:scale(0) rotate(-180deg);}to{transform:scale(1) rotate(0deg);}}
+    .message.bot .avatar{background:var(--gold);color:var(--navy);box-shadow:0 4px 12px rgba(201,168,76,0.3);}
+    .message.user .avatar{background:var(--navy);color:var(--gold);box-shadow:0 4px 12px rgba(10,22,40,0.2);}
+    .bubble{max-width:65%;padding:1.2rem 1.5rem;border-radius:var(--radius-md);line-height:1.7;box-shadow:var(--shadow-sm);transition:transform 0.2s;}
+    .bubble:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(10,22,40,0.12);}
     .message.bot .bubble{background:var(--white);border:1px solid var(--border);}
     .message.user .bubble{background:var(--navy);color:var(--white);}
     
@@ -83,15 +96,27 @@
     .welcome h2 .gold{color:var(--gold);font-style:italic;}
     .welcome p{font-size:1rem;color:var(--text-secondary);margin-bottom:2rem;}
     .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;}
-    .quick-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.2rem;text-align:left;cursor:pointer;transition:var(--t);}
-    .quick-card:hover{border-color:var(--border-gold);box-shadow:var(--shadow-sm);transform:translateY(-3px);}
+    .quick-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.2rem;text-align:left;cursor:pointer;transition:var(--t);position:relative;overflow:hidden;}
+    .quick-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(201,168,76,0.1),transparent);transform:translateX(-100%);transition:transform 0.3s;}
+    .quick-card:hover{border-color:var(--border-gold);box-shadow:var(--shadow-md);transform:translateY(-5px) scale(1.02);}
+    .quick-card:hover::before{transform:translateX(0);}
+    .quick-card:active{transform:translateY(-2px) scale(0.98);}
     .quick-icon{font-size:1.6rem;margin-bottom:0.5rem;display:block;}
     .quick-title{font-weight:600;font-size:0.9rem;color:var(--navy);}
     
     /* Input */
     .input-area{padding:1.5rem 2rem;background:var(--white);border-top:1px solid var(--border);}
-    .input-wrapper{max-width:1100px;margin:0 auto;display:flex;gap:1rem;align-items:flex-end;}
-    .input-wrapper textarea{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:0.85rem 1.1rem;font-size:0.92rem;color:var(--navy);background:var(--white);resize:none;min-height:56px;max-height:150px;font-family:inherit;transition:var(--t);}
+    .input-wrapper{max-width:1100px;margin:0 auto;display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;}
+    
+    .btn-attach{display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:var(--off-white);border:1.5px solid var(--border);border-radius:var(--radius-md);font-size:1.5rem;cursor:pointer;transition:var(--t);flex-shrink:0;}
+    .btn-attach:hover{border-color:var(--gold);background:rgba(201,168,76,0.1);transform:scale(1.05);}
+    
+    #filePreview{width:100%;display:flex;gap:0.5rem;align-items:center;padding:0.5rem;background:var(--off-white);border-radius:var(--radius-sm);margin-bottom:0.5rem;font-size:0.85rem;}
+    #filePreview img{max-width:60px;max-height:60px;border-radius:4px;object-fit:cover;}
+    #filePreview .file-info{flex:1;}
+    #filePreview .file-remove{color:var(--danger);cursor:pointer;font-weight:600;}
+    
+    .input-wrapper textarea{flex:1;min-width:200px;border:1.5px solid var(--border);border-radius:var(--radius-md);padding:0.85rem 1.1rem;font-size:0.92rem;color:var(--navy);background:var(--white);resize:none;min-height:56px;max-height:150px;font-family:inherit;transition:var(--t);}
     .input-wrapper textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.12);}
     .input-wrapper textarea::placeholder{color:var(--text-muted);}
     .btn-send{background:var(--gold);color:var(--navy);border:none;padding:0.85rem 2rem;border-radius:100px;font-weight:700;font-size:0.95rem;cursor:pointer;transition:var(--t);}
@@ -110,6 +135,27 @@
     pre{background:var(--off-white);border:1px solid var(--border);padding:1rem;border-radius:var(--radius-sm);overflow-x:auto;margin:0.8rem 0;}
     pre code{background:none;padding:0;}
     strong{color:var(--gold);font-weight:700;}
+    
+    /* Skeleton Loading Screens */
+    .skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-loading 1.5s infinite;}
+    @keyframes skeleton-loading{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    
+    .skeleton-message{display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.5rem;}
+    .skeleton-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-loading 1.5s infinite;}
+    .skeleton-bubble{flex:1;max-width:65%;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.2rem 1.5rem;}
+    .skeleton-line{height:14px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;border-radius:4px;margin-bottom:0.75rem;animation:skeleton-loading 1.5s infinite;}
+    .skeleton-line:last-child{margin-bottom:0;}
+    .skeleton-line.short{width:70%;}
+    .skeleton-line.medium{width:85%;}
+    .skeleton-line.long{width:100%;}
+    
+    .skeleton-history-item{padding:0.65rem;background:var(--off-white);border-radius:var(--radius-sm);margin-bottom:0.5rem;}
+    .skeleton-history-title{height:12px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;border-radius:4px;margin-bottom:0.4rem;animation:skeleton-loading 1.5s infinite;}
+    .skeleton-history-date{height:10px;width:60%;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;border-radius:4px;animation:skeleton-loading 1.5s infinite;}
+    
+    .skeleton-stats{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;}
+    .skeleton-stats-line{height:16px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;border-radius:4px;margin-bottom:0.5rem;animation:skeleton-loading 1.5s infinite;}
+    .skeleton-stats-line:last-child{margin-bottom:0;width:80%;}
     
     @media(max-width:900px){
       .chat-layout{flex-direction:column;}
@@ -132,6 +178,7 @@
           <span class="premium-badge free" id="planBadge">Gratis</span>
           <span class="nav-user-name" id="userName">Cargando...</span>
         </div>
+        <button class="btn-nav" id="themeToggle" title="Cambiar tema">🌙</button>
         <button class="btn-nav" id="logoutBtn">Salir</button>
       </div>
     </div>
@@ -140,6 +187,32 @@
   <div class="chat-layout">
     <aside class="sidebar">
       <button class="sidebar-btn" id="newChatBtn">+ Nueva conversación</button>
+      
+      <!-- Botón de Plan de Estudio -->
+      <button class="sidebar-btn-special" id="studyPlanBtn">
+        📚 Generar Plan de Estudio
+      </button>
+      
+      <!-- Botón de Exportar PDF -->
+      <button class="sidebar-btn-special" id="exportPDFBtn" style="background:linear-gradient(135deg,#10b981,#059669);">
+        📄 Exportar Chat a PDF
+      </button>
+      
+      <!-- Estadísticas de uso -->
+      <div id="userStats" style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;display:none;">
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.5rem;">📊 Tu progreso</div>
+        <div style="font-size:0.9rem;color:var(--navy);"><strong id="statsQuestions">0</strong> preguntas este mes</div>
+        <div style="font-size:0.9rem;color:var(--navy);margin-top:0.25rem;">🔥 Racha: <strong id="statsStreak">0</strong> días</div>
+      </div>
+      
+      <!-- Contador visual de preguntas -->
+      <div id="questionCounter" style="display:none;" class="question-counter">
+        <div class="counter-label">Preguntas hoy</div>
+        <div class="counter-number" id="counterNumber">0/10</div>
+        <div class="counter-bar">
+          <div class="counter-bar-fill" id="counterBarFill" style="width:0%"></div>
+        </div>
+      </div>
       
       <!-- Banner de límite de preguntas para usuarios gratuitos -->
       <div id="limitBanner" style="display:none;"></div>
@@ -178,9 +251,21 @@
 
       <div class="input-area">
         <div class="input-wrapper">
+          <!-- Botón para adjuntar archivos -->
+          <label for="fileInput" class="btn-attach" title="Adjuntar imagen o archivo">
+            📎
+          </label>
+          <input type="file" id="fileInput" accept="image/*,.pdf,.doc,.docx,.txt" style="display:none;" />
+          
+          <!-- Botón de voz -->
+          <button class="btn-attach" id="voiceBtn" title="Grabar voz">🎤</button>
+          
+          <!-- Preview de archivo adjunto -->
+          <div id="filePreview" style="display:none;"></div>
+          
           <textarea 
             id="userInput" 
-            placeholder="Escribe tu pregunta aquí..."
+            placeholder="Escribe tu pregunta aquí o adjunta una imagen..."
             rows="1"
           ></textarea>
           <button class="btn-send" id="sendBtn">Enviar</button>
@@ -193,6 +278,24 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <!-- PDF.js para extraer texto de PDFs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  
+  <!-- jsPDF para exportar a PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  
+  <!-- Funcionalidades Avanzadas (3 partes) -->
+  <script src="advanced-features.js"></script>
+  <script src="advanced-features-2.js"></script>
+  <script src="advanced-features-3.js"></script>
+  
+  <script>
+    // Configurar PDF.js worker
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
 
   <script>
     // Configuración de Firebase
@@ -364,12 +467,32 @@
     // Actualizar banner de límite de preguntas
     function updateLimitBanner() {
       const banner = document.getElementById('limitBanner');
+      const counter = document.getElementById('questionCounter');
       const status = canAskQuestion();
       
       if (userPlan === 'premium' || userPlan === 'lifetime') {
-        // No mostrar banner para usuarios premium
+        // No mostrar banner ni contador para usuarios premium
         banner.style.display = 'none';
+        counter.style.display = 'none';
         return;
+      }
+      
+      // Mostrar contador visual
+      counter.style.display = 'block';
+      const counterNumber = document.getElementById('counterNumber');
+      const counterBarFill = document.getElementById('counterBarFill');
+      
+      counterNumber.textContent = `${status.count}/${status.limit}`;
+      const percentage = (status.count / status.limit) * 100;
+      counterBarFill.style.width = percentage + '%';
+      
+      // Cambiar color si está cerca del límite
+      if (status.remaining <= 3) {
+        counterBarFill.classList.add('warning');
+        counterNumber.style.color = '#ef4444';
+      } else {
+        counterBarFill.classList.remove('warning');
+        counterNumber.style.color = 'var(--gold)';
       }
       
       banner.style.display = 'block';
@@ -401,6 +524,511 @@
     // Cargar suscripción al iniciar
     loadSubscription();
     document.getElementById('welcomeName').textContent = session.name;
+
+    // ========================================
+    // PWA - SERVICE WORKER
+    // ========================================
+    
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/luminam-ia/sw.js')
+          .then(reg => console.log('✅ Service Worker registrado'))
+          .catch(err => console.log('❌ SW error:', err));
+      });
+    }
+
+    // ========================================
+    // ESTADÍSTICAS DE USO
+    // ========================================
+    
+    function updateUserStats() {
+      const stats = JSON.parse(localStorage.getItem('luminom_stats') || '{"totalQuestions":0,"lastUseDate":"","streak":0}');
+      const today = new Date().toDateString();
+      
+      // Actualizar racha
+      if (stats.lastUseDate === today) {
+        // Ya usó hoy
+      } else if (stats.lastUseDate === new Date(Date.now() - 86400000).toDateString()) {
+        // Usó ayer, incrementar racha
+        stats.streak = (stats.streak || 0) + 1;
+      } else if (stats.lastUseDate !== '') {
+        // Rompió racha
+        stats.streak = 1;
+      } else {
+        stats.streak = 1;
+      }
+      
+      stats.lastUseDate = today;
+      localStorage.setItem('luminom_stats', JSON.stringify(stats));
+      
+      // Mostrar estadísticas
+      document.getElementById('statsQuestions').textContent = stats.totalQuestions || 0;
+      document.getElementById('statsStreak').textContent = stats.streak || 0;
+      document.getElementById('userStats').style.display = 'block';
+    }
+    
+    updateUserStats();
+
+    // ========================================
+    // EXPORTAR CHAT A PDF
+    // ========================================
+    
+    document.getElementById('exportPDFBtn').addEventListener('click', () => {
+      if (conversationHistory.length === 0) {
+        alert('⚠️ No hay conversación para exportar. Haz algunas preguntas primero.');
+        return;
+      }
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Título
+        doc.setFontSize(20);
+        doc.setTextColor(10, 22, 40);
+        doc.text('Luminom IA - Conversación', 20, 20);
+        
+        // Info
+        doc.setFontSize(10);
+        doc.setTextColor(74, 85, 104);
+        doc.text(`Estudiante: ${session.name}`, 20, 30);
+        doc.text(`Carrera: ${session.carrera}`, 20, 35);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-CO')}`, 20, 40);
+        
+        // Conversación
+        let yPos = 50;
+        doc.setFontSize(11);
+        
+        conversationHistory.forEach((msg, index) => {
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          // Rol
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(msg.role === 'user' ? 201 : 16, msg.role === 'user' ? 168 : 185, msg.role === 'user' ? 76 : 129);
+          doc.text(msg.role === 'user' ? 'Tú:' : 'Luminom IA:', 20, yPos);
+          
+          // Contenido
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(10, 22, 40);
+          const lines = doc.splitTextToSize(msg.content, 170);
+          doc.text(lines, 20, yPos + 5);
+          
+          yPos += 5 + (lines.length * 5) + 5;
+        });
+        
+        // Guardar
+        doc.save(`luminom-conversacion-${new Date().toISOString().split('T')[0]}.pdf`);
+        
+        alert('✅ Conversación exportada exitosamente');
+      } catch (error) {
+        console.error('Error al exportar PDF:', error);
+        alert('⚠️ Error al exportar PDF. Inténtalo de nuevo.');
+      }
+    });
+
+    // ========================================
+    // RECONOCIMIENTO DE VOZ
+    // ========================================
+    
+    let recognition = null;
+    let isRecording = false;
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'es-CO';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('userInput').value = transcript;
+        isRecording = false;
+        document.getElementById('voiceBtn').textContent = '🎤';
+        document.getElementById('voiceBtn').style.background = '';
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Error de reconocimiento:', event.error);
+        isRecording = false;
+        document.getElementById('voiceBtn').textContent = '🎤';
+        document.getElementById('voiceBtn').style.background = '';
+        
+        if (event.error === 'no-speech') {
+          alert('⚠️ No se detectó voz. Intenta de nuevo.');
+        } else if (event.error === 'not-allowed') {
+          alert('⚠️ Necesitas dar permiso para usar el micrófono.');
+        }
+      };
+      
+      recognition.onend = () => {
+        isRecording = false;
+        document.getElementById('voiceBtn').textContent = '🎤';
+        document.getElementById('voiceBtn').style.background = '';
+      };
+      
+      document.getElementById('voiceBtn').addEventListener('click', () => {
+        if (isRecording) {
+          recognition.stop();
+          isRecording = false;
+          document.getElementById('voiceBtn').textContent = '🎤';
+          document.getElementById('voiceBtn').style.background = '';
+        } else {
+          recognition.start();
+          isRecording = true;
+          document.getElementById('voiceBtn').textContent = '⏹️';
+          document.getElementById('voiceBtn').style.background = '#ef4444';
+        }
+      });
+    } else {
+      document.getElementById('voiceBtn').style.display = 'none';
+      console.log('❌ Reconocimiento de voz no soportado en este navegador');
+    }
+
+    // ========================================
+    // DARK MODE
+    // ========================================
+    
+    // Cargar tema guardado
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+      document.getElementById('themeToggle').textContent = '☀️';
+    }
+    
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDark);
+      document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+    });
+
+    // ========================================
+    // GENERADOR DE PLAN DE ESTUDIO
+    // ========================================
+    
+    document.getElementById('studyPlanBtn').addEventListener('click', () => {
+      hideWelcome();
+      const messagesDiv = document.getElementById('messages');
+      
+      // Crear formulario simple
+      const formHTML = `
+        <div class="message bot" style="max-width:600px;margin:2rem auto;">
+          <div class="avatar">L</div>
+          <div class="bubble" style="max-width:100%;">
+            <h3 style="margin-bottom:1rem;color:var(--navy);">📚 Generar Plan de Estudio</h3>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;">¿Qué materia quieres estudiar?</label>
+              <input type="text" id="studySubject" placeholder="Ej: Cálculo Diferencial" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;" />
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;">¿Cuánto tiempo tienes?</label>
+              <select id="studyTime" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;">
+                <option value="1 semana">1 semana</option>
+                <option value="2 semanas" selected>2 semanas</option>
+                <option value="1 mes">1 mes</option>
+                <option value="2 meses">2 meses</option>
+              </select>
+            </div>
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;margin-bottom:0.5rem;font-weight:600;">¿Cuántas horas al día puedes estudiar?</label>
+              <select id="studyHours" style="width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;">
+                <option value="1 hora">1 hora</option>
+                <option value="2 horas" selected>2 horas</option>
+                <option value="3 horas">3 horas</option>
+                <option value="4 horas">4 horas</option>
+                <option value="5+ horas">5+ horas</option>
+              </select>
+            </div>
+            <button onclick="generateStudyPlan()" style="width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:0.85rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:1rem;">
+              ✨ Generar Mi Plan
+            </button>
+          </div>
+        </div>
+      `;
+      
+      messagesDiv.innerHTML = formHTML;
+    });
+    
+    window.generateStudyPlan = async function() {
+      const subject = document.getElementById('studySubject').value.trim();
+      const time = document.getElementById('studyTime').value;
+      const hours = document.getElementById('studyHours').value;
+      
+      if (!subject) {
+        alert('Por favor ingresa la materia que quieres estudiar');
+        return;
+      }
+      
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = '';
+      
+      const promptText = `Crea un plan de estudio detallado para ${subject}. 
+Duración: ${time}
+Tiempo disponible: ${hours} al día
+Carrera: ${session.carrera}
+
+Formato del plan:
+- Organizado por días/semanas
+- Temas específicos por sesión
+- Objetivos claros
+- Recursos recomendados
+- Consejos de estudio`;
+      
+      // Mostrar pregunta del usuario
+      addMessage(`📚 Generar plan de estudio para:\n• Materia: ${subject}\n• Tiempo: ${time}\n• Horas diarias: ${hours}`, true);
+      
+      conversationHistory = []; // Limpiar historia para este plan
+      conversationHistory.push({ role: 'user', content: promptText });
+      
+      showTyping();
+      const aiResponse = await callGroqAPI(promptText);
+      hideTyping();
+      
+      addMessage(aiResponse, false);
+      conversationHistory.push({ role: 'assistant', content: aiResponse });
+      
+      saveCurrentChat();
+    };
+
+    // ========================================
+    // MANEJO DE ARCHIVOS E IMÁGENES
+    // ========================================
+    
+    let attachedFile = null;
+    let attachedFileDataURL = null;
+    let extractedFileContent = null;
+    
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Validar tamaño (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('⚠️ El archivo es muy grande. Máximo 5MB.');
+        e.target.value = '';
+        return;
+      }
+      
+      attachedFile = file;
+      extractedFileContent = null;
+      
+      // Mostrar indicador de procesamiento
+      showFilePreview(file, null, true);
+      
+      try {
+        // Procesar según tipo de archivo
+        if (file.type.startsWith('image/')) {
+          // Imágenes: convertir a base64
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            attachedFileDataURL = event.target.result;
+            showFilePreview(file, event.target.result, false);
+          };
+          reader.readAsDataURL(file);
+        } else if (file.type === 'application/pdf') {
+          // PDFs: extraer texto
+          await extractPDFText(file);
+        } else if (file.type === 'text/plain') {
+          // TXT: leer directamente
+          await extractTextFromFile(file);
+        } else {
+          // Otros archivos
+          showFilePreview(file, null, false);
+        }
+      } catch (error) {
+        console.error('Error al procesar archivo:', error);
+        alert('⚠️ Error al procesar el archivo. Intenta con otro formato.');
+        removeFile();
+      }
+    });
+    
+    // Extraer texto de archivos PDF
+    async function extractPDFText(file) {
+      try {
+        console.log('📄 Extrayendo texto de PDF...');
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        let fullText = '';
+        const numPages = pdf.numPages;
+        
+        // Extraer texto de cada página
+        for (let i = 1; i <= numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += `\n--- Página ${i} ---\n${pageText}\n`;
+        }
+        
+        extractedFileContent = fullText.trim();
+        console.log(`✅ Extraídas ${numPages} páginas, ${extractedFileContent.length} caracteres`);
+        
+        // Limitar a 10,000 caracteres para no sobrecargar la IA
+        if (extractedFileContent.length > 10000) {
+          extractedFileContent = extractedFileContent.substring(0, 10000) + '\n\n[... Contenido truncado. Solo se muestran los primeros 10,000 caracteres]';
+        }
+        
+        showFilePreview(file, null, false);
+      } catch (error) {
+        console.error('Error al extraer PDF:', error);
+        alert('⚠️ No se pudo leer el PDF. Asegúrate de que no esté protegido.');
+        removeFile();
+      }
+    }
+    
+    // Extraer texto de archivos TXT
+    async function extractTextFromFile(file) {
+      try {
+        console.log('📝 Leyendo archivo de texto...');
+        
+        const text = await file.text();
+        extractedFileContent = text.trim();
+        
+        console.log(`✅ Leído, ${extractedFileContent.length} caracteres`);
+        
+        // Limitar a 10,000 caracteres
+        if (extractedFileContent.length > 10000) {
+          extractedFileContent = extractedFileContent.substring(0, 10000) + '\n\n[... Contenido truncado]';
+        }
+        
+        showFilePreview(file, null, false);
+      } catch (error) {
+        console.error('Error al leer archivo:', error);
+        alert('⚠️ No se pudo leer el archivo.');
+        removeFile();
+      }
+    }
+    
+    function showFilePreview(file, dataURL, isProcessing) {
+      const preview = document.getElementById('filePreview');
+      preview.style.display = 'flex';
+      
+      let previewHTML = '';
+      let statusText = '';
+      
+      if (isProcessing) {
+        previewHTML = `<span style="font-size:2rem;">⏳</span>`;
+        statusText = '<span style="color:#f59e0b;">Procesando...</span>';
+      } else if (dataURL && file.type.startsWith('image/')) {
+        previewHTML = `<img src="${dataURL}" alt="Preview" />`;
+        statusText = '<span style="color:#10b981;">✓ Listo</span>';
+      } else if (extractedFileContent) {
+        previewHTML = `<span style="font-size:2rem;">📄</span>`;
+        const charCount = extractedFileContent.length;
+        statusText = `<span style="color:#10b981;">✓ Texto extraído (${charCount} caracteres)</span>`;
+      } else {
+        previewHTML = `<span style="font-size:2rem;">📄</span>`;
+        statusText = '<span style="color:#f59e0b;">Nombre del archivo solamente</span>';
+      }
+      
+      preview.innerHTML = `
+        ${previewHTML}
+        <div class="file-info">
+          <strong>${file.name}</strong><br>
+          <span style="font-size:0.75rem;">${(file.size / 1024).toFixed(1)} KB • ${statusText}</span>
+        </div>
+        <span class="file-remove" onclick="removeFile()">✕</span>
+      `;
+    }
+    
+    window.removeFile = function() {
+      attachedFile = null;
+      attachedFileDataURL = null;
+      extractedFileContent = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('filePreview').style.display = 'none';
+    };
+
+    // ========================================
+    // MODIFICAR sendMessage PARA INCLUIR ARCHIVOS
+    // ========================================
+    
+    // Guardar referencia a la función original
+    const originalSendMessage = sendMessage;
+    
+    // Reemplazar con nueva versión que maneja archivos
+    sendMessage = async function() {
+      const input = document.getElementById('userInput');
+      const message = input.value.trim();
+      
+      if (!message && !attachedFile) return;
+      
+      // Verificar límite de preguntas
+      const status = canAskQuestion();
+      
+      if (!status.allowed) {
+        alert(`⚠️ Has alcanzado el límite de ${status.limit} preguntas diarias del plan gratuito.\n\n💎 Mejora a Premium para preguntas ilimitadas desde $14,900/mes o De por Vida por $299,000.\n\nVisita la página de Servicios para actualizar tu plan.`);
+        
+        if (confirm('¿Quieres ver los planes disponibles?')) {
+          window.open('servicios.html', '_blank');
+        }
+        return;
+      }
+      
+      if (!API_CONFIG.key) {
+        alert('⚠️ Error: No hay API Key configurada. Contacta al administrador.');
+        return;
+      }
+      
+      input.value = '';
+      input.style.height = 'auto';
+      
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Enviando...';
+      
+      // Construir mensaje con contexto del archivo
+      let fullMessage = message;
+      
+      if (attachedFile) {
+        if (extractedFileContent) {
+          // Si se extrajo contenido del archivo
+          fullMessage = `He adjuntado el archivo "${attachedFile.name}" con el siguiente contenido:\n\n${extractedFileContent}\n\n---\n\nMi pregunta: ${message || 'Analiza este contenido y explícamelo'}`;
+        } else if (attachedFile.type.startsWith('image/')) {
+          // Para imágenes (futuro: integrar API de visión)
+          fullMessage = `[Imagen adjunta: ${attachedFile.name}]\n\n${message || 'Analiza esta imagen y explícame qué ves'}\n\n(Nota: Actualmente no puedo ver el contenido de imágenes, pero puedo ayudarte si describes lo que ves)`;
+        } else {
+          // Para archivos sin extracción
+          fullMessage = `[Archivo adjunto: ${attachedFile.name}]\n\n${message}`;
+        }
+        
+        removeFile();
+      }
+      
+      addMessage(message || '📎 Archivo adjunto', true);
+      conversationHistory.push({ role: 'user', content: fullMessage });
+      
+      showTyping();
+      
+      const aiResponse = await callGroqAPI(fullMessage);
+      
+      hideTyping();
+      addMessage(aiResponse, false);
+      
+      conversationHistory.push({ role: 'assistant', content: aiResponse });
+      
+      if (userPlan === 'free') {
+        incrementQuestionCount();
+      }
+      
+      saveCurrentChat();
+      
+      const stats = JSON.parse(localStorage.getItem('luminom_stats') || '{"totalQuestions":0,"totalConversations":0}');
+      stats.totalQuestions = (stats.totalQuestions || 0) + 1;
+      localStorage.setItem('luminom_stats', JSON.stringify(stats));
+      
+      if (conversationHistory.length > 20) {
+        conversationHistory = conversationHistory.slice(-20);
+      }
+      
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Enviar';
+      input.focus();
+    };
 
     // Configuración de API (Key pre-configurada y ofuscada)
     const API_CONFIG = {
@@ -630,6 +1258,11 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       stats.totalQuestions = (stats.totalQuestions || 0) + 1;
       localStorage.setItem('luminom_stats', JSON.stringify(stats));
       
+      // Verificar logros desbloqueados
+      if (typeof checkAndUnlockAchievements !== 'undefined') {
+        setTimeout(checkAndUnlockAchievements, 500);
+      }
+      
       if (conversationHistory.length > 20) {
         conversationHistory = conversationHistory.slice(-20);
       }
@@ -759,8 +1392,8 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       const session = Auth.getSession();
       const historyList = document.getElementById('historyList');
       
-      // Mostrar indicador de carga
-      historyList.innerHTML = '<div class="history-item">📁 Cargando historial...</div>';
+      // Mostrar skeleton screens mientras carga
+      showHistorySkeleton();
       
       try {
         console.log('🔵 Cargando historial desde Firebase...');
@@ -778,22 +1411,39 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
           });
         });
         
+        // Filtrar por favoritos si está activo
+        let filteredChats = userChats;
+        if (typeof favoritesFilter !== 'undefined' && favoritesFilter === 'favorites') {
+          filteredChats = userChats.filter(chat => chat.isFavorite === true);
+        }
+        
         // Ordenar en JavaScript en lugar de Firestore
-        userChats.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        filteredChats.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
         
-        console.log(`✅ Cargados ${userChats.length} chats desde Firebase`);
+        console.log(`✅ Cargados ${filteredChats.length} chats desde Firebase`);
         
-        if (userChats.length === 0) {
-          historyList.innerHTML = '<div class="history-item">Sin conversaciones previas</div>';
+        if (filteredChats.length === 0) {
+          const message = favoritesFilter === 'favorites' 
+            ? 'No tienes chats favoritos aún' 
+            : 'Sin conversaciones previas';
+          historyList.innerHTML = `<div class="history-item">${message}</div>`;
           return;
         }
         
-        historyList.innerHTML = userChats.map(chat => `
-          <div class="history-item" onclick="loadChat('${chat.id}')">
-            <div style="font-weight:600;margin-bottom:0.2rem;color:var(--navy);">${chat.title}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted);">${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</div>
-          </div>
-        `).join('');
+        historyList.innerHTML = filteredChats.map(chat => {
+          const isFav = chat.isFavorite || false;
+          return `
+            <div class="history-item" onclick="loadChat('${chat.id}')">
+              <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.2rem;">
+                <div style="font-weight:600;color:var(--navy);flex:1;">${chat.title}</div>
+                <span class="favorite-star" onclick="toggleFavorite('${chat.id}', event)" title="${isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                  ${isFav ? '⭐' : '☆'}
+                </span>
+              </div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">${new Date(chat.updatedAt).toLocaleDateString('es-CO')}</div>
+            </div>
+          `;
+        }).join('');
       } catch (error) {
         console.error('❌ Error al cargar historial de Firebase:', error);
         console.error('Código de error:', error.code);
@@ -815,6 +1465,25 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
         // NO usar localStorage como fallback - queremos que el usuario vea que Firebase no está funcionando
         console.log('⚠️ No se usará localStorage - esperando configuración de Firebase');
       }
+    }
+    
+    // Mostrar skeleton loading para historial
+    function showHistorySkeleton() {
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = `
+        <div class="skeleton-history-item">
+          <div class="skeleton-history-title"></div>
+          <div class="skeleton-history-date"></div>
+        </div>
+        <div class="skeleton-history-item">
+          <div class="skeleton-history-title"></div>
+          <div class="skeleton-history-date"></div>
+        </div>
+        <div class="skeleton-history-item">
+          <div class="skeleton-history-title"></div>
+          <div class="skeleton-history-date"></div>
+        </div>
+      `;
     }
 
     function loadFromLocalStorage() {
@@ -936,6 +1605,76 @@ NUNCA inventes datos, fórmulas o teoremas que no existen.`;
       this.style.height = 'auto';
       this.style.height = Math.min(this.scrollHeight, 150) + 'px';
     });
+
+    // ========================================
+    // SKELETON LOADING SCREENS
+    // ========================================
+    
+    // Mostrar skeleton screens para mensajes
+    function showMessagesSkeleton() {
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = `
+        <div class="skeleton-message">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-bubble">
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+        <div class="skeleton-message" style="flex-direction:row-reverse;">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-bubble">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line long"></div>
+          </div>
+        </div>
+        <div class="skeleton-message">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-bubble">
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Aplicar skeleton screens al cargar chat
+    window.loadChat = async function(chatId) {
+      try {
+        // Mostrar skeleton mientras carga
+        showMessagesSkeleton();
+        
+        // Cargar desde Firebase
+        const chatDoc = await db.collection('chats').doc(chatId).get();
+        
+        if (!chatDoc.exists) {
+          console.log('⚠️ Chat no encontrado');
+          newChat();
+          return;
+        }
+        
+        const chat = chatDoc.data();
+        conversationHistory = chat.messages || [];
+        currentChatId = chatId;
+        
+        // Renderizar mensajes reales
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML = '';
+        
+        conversationHistory.forEach(msg => {
+          addMessage(msg.content, msg.role === 'user');
+        });
+        
+        console.log(`✅ Chat cargado: ${conversationHistory.length} mensajes`);
+      } catch (error) {
+        console.error('❌ Error al cargar chat:', error);
+        newChat();
+      }
+    };
+    
+    console.log('✅ Skeleton loading screens habilitadas');
 
     document.getElementById('userInput').focus();
   </script>
