@@ -298,99 +298,19 @@
     }
     
     .history-item {
-      background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.15));
-      border: 3px solid var(--gold);
-      padding: 1.2rem 1.1rem;
-      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      padding: 0.6rem;
+      border-radius: 8px;
+      font-size: 0.76rem;
       cursor: pointer;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .history-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1));
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    
-    .history-item:hover::before {
-      opacity: 1;
+      transition: var(--transition);
+      margin-bottom: 0.4rem;
     }
     
     .history-item:hover {
-      background: linear-gradient(135deg, var(--gold-light), var(--gold));
-      border-color: var(--white);
-      transform: translateY(-5px) scale(1.04);
-      box-shadow: 0 10px 35px rgba(201,168,76,0.6);
-    }
-    
-    .history-item:active {
-      transform: translateY(-3px) scale(1.02);
-    }
-    
-    .history-title {
-      font-weight: 700;
-      margin-bottom: 0.7rem;
-      color: var(--white);
-      font-size: 0.96rem;
-      line-height: 1.5;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
-      position: relative;
-      z-index: 1;
-    }
-    
-    .history-item:hover .history-title {
-      color: var(--navy);
-      text-shadow: none;
-    }
-    
-    .history-date {
-      font-size: 0.80rem;
-      color: rgba(255,255,255,0.85);
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-weight: 600;
-      position: relative;
-      z-index: 1;
-    }
-    
-    .history-item:hover .history-date {
-      color: var(--navy);
-    }
-    
-    .history-date::before {
-      content: '🕒';
-      font-size: 1rem;
-    }
-    
-    .history-empty {
-      text-align: center;
-      padding: 4rem 1.5rem;
-      color: rgba(255,255,255,0.55);
-      font-size: 0.92rem;
-      line-height: 1.9;
-    }
-    
-    .history-empty-icon {
-      font-size: 5rem;
-      margin-bottom: 1.8rem;
-      opacity: 0.5;
-      animation: floatAnimation 3.5s ease-in-out infinite;
-    }
-    
-    @keyframes floatAnimation {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-15px) rotate(5deg); }
+      background: rgba(201,168,76,0.1);
+      border-color: var(--border-gold);
     }
     
     /* === CHAT AREA === */
@@ -670,101 +590,6 @@
         transform: translateY(-8px);
       }
     }
-    
-    /* === MODAL === */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(10, 22, 40, 0.92);
-      backdrop-filter: blur(8px);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
-    
-    .modal.active {
-      display: flex;
-    }
-    
-    .modal-content {
-      background: var(--white);
-      border-radius: 16px;
-      max-width: 700px;
-      width: 100%;
-      max-height: 85vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-      animation: modalIn 0.3s ease;
-    }
-    
-    @keyframes modalIn {
-      from {
-        opacity: 0;
-        transform: translateY(30px) scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-    
-    .modal-header {
-      padding: 1.5rem 2rem;
-      border-bottom: 1px solid rgba(10, 22, 40, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    
-    .modal-title {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--navy);
-    }
-    
-    .modal-close {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(10, 22, 40, 0.08);
-      border: none;
-      color: var(--navy);
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .modal-close:hover {
-      background: var(--gold);
-      color: var(--white);
-      transform: rotate(90deg);
-    }
-    
-    .modal-body {
-      padding: 2rem;
-      overflow-y: auto;
-      flex: 1;
-    }
-    
-    .modal-body::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    .modal-body::-webkit-scrollbar-thumb {
-      background: rgba(10, 22, 40, 0.2);
-      border-radius: 3px;
-    }
   </style>
 </head>
 <body>
@@ -837,12 +662,10 @@
         </div>
       </div>
 
-      <!-- History Section - MAXIMIZED AND FUNCTIONAL -->
-      <div class="sidebar-section" style="flex:2;display:flex;flex-direction:column;min-height:300px;max-height:none;padding:1.2rem;background:rgba(0,0,0,0.25);border-radius:12px;margin:0.5rem;border:2px solid rgba(201,168,76,0.3);">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--gold);margin-bottom:1.2rem;text-transform:uppercase;letter-spacing:0.15em;display:flex;align-items:center;gap:0.5rem;text-shadow:0 2px 8px rgba(201,168,76,0.5);">
-          💬 MIS CONVERSACIONES
-        </div>
-        <div id="historyList" style="flex:1;overflow-y:auto;min-height:0;padding-right:0.5rem;"></div>
+      <!-- History Section -->
+      <div class="sidebar-section" style="flex:1;overflow-y:auto;">
+        <div class="sidebar-label">HISTORIAL</div>
+        <div id="historyList"></div>
       </div>
       
     </div>
@@ -910,7 +733,7 @@
   <div class="modal" id="featureModal">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-title" id="modalTitle">Título</div>
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
       <div class="modal-body" id="modalBody">
@@ -1247,46 +1070,18 @@
         const historyList = document.getElementById('historyList');
         
         if (chatHistory.length === 0) {
-          historyList.innerHTML = `
-            <div class="history-empty" style="text-align:center;padding:2rem 1rem;color:rgba(255,255,255,0.6);">
-              <div class="history-empty-icon" style="font-size:5rem;margin-bottom:1rem;opacity:0.7;animation:float 3s ease-in-out infinite;">💬</div>
-              <div style="font-weight:600;font-size:1rem;margin-bottom:0.6rem;color:var(--gold);">Sin conversaciones</div>
-              <div style="font-size:0.85rem;opacity:0.85;line-height:1.5;">Tus chats aparecerán aquí cuando inicies una conversación</div>
-            </div>
-          `;
+          historyList.innerHTML = '<div style="color:rgba(255,255,255,0.4);text-align:center;font-size:0.75rem;">Sin historial</div>';
         } else {
-          historyList.innerHTML = chatHistory.map((chat, idx) => {
+          historyList.innerHTML = chatHistory.map(chat => {
             const date = new Date(chat.updatedAt);
-            const dateStr = date.toLocaleDateString('es-CO', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
-            const title = (chat.title || 'Nueva conversación').substring(0, 50);
-            
+            const dateStr = date.toLocaleDateString('es-CO', {month: 'short', day: 'numeric'});
             return `
-              <div class="history-item" data-chat-id="${chat.id}">
-                <div class="history-title">${title}</div>
-                <div class="history-date">${dateStr}</div>
+              <div class="history-item" onclick="loadChat('${chat.id}')">
+                <div style="font-weight:600;margin-bottom:0.2rem;">${chat.title}</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);">${dateStr}</div>
               </div>
             `;
           }).join('');
-          
-          // Add click listeners properly
-          setTimeout(() => {
-            const items = document.querySelectorAll('.history-item');
-            console.log('🔵 Adding listeners to', items.length, 'history items');
-            items.forEach(item => {
-              item.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const chatId = this.getAttribute('data-chat-id');
-                console.log('🔵 History item clicked, chatId:', chatId);
-                if (window.loadChat) {
-                  window.loadChat(chatId);
-                } else {
-                  console.error('❌ window.loadChat not found');
-                }
-              });
-            });
-            console.log('✅ Click listeners attached to all history items');
-          }, 100);
         }
         
         document.getElementById('chatCount').textContent = chatHistory.length;
@@ -1301,14 +1096,10 @@
     // LOAD SPECIFIC CHAT
     // ============================================
     window.loadChat = async function(chatId) {
-      console.log('🔵 Loading chat:', chatId);
       try {
         const doc = await db.collection('chats').doc(chatId).get();
         
-        if (!doc.exists) {
-          console.error('❌ Chat not found:', chatId);
-          return;
-        }
+        if (!doc.exists) return;
         
         const chatData = doc.data();
         currentChatId = chatId;
@@ -1318,19 +1109,16 @@
         messagesContainer.innerHTML = '';
         
         // Render messages
-        if (chatData.messages && chatData.messages.length > 0) {
-          chatData.messages.forEach(msg => {
-            addMessage(msg.role, msg.content, false);
-          });
-        }
+        chatData.messages.forEach(msg => {
+          addMessage(msg.role, msg.content, false);
+        });
         
         // Scroll to bottom
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         
-        console.log(`✅ Loaded chat: ${chatId} with ${chatData.messages?.length || 0} messages`);
+        console.log(`✅ Loaded chat: ${chatId}`);
       } catch (error) {
         console.error('❌ Error loading chat:', error);
-        alert('⚠️ Error al cargar la conversación');
       }
     }
 
@@ -1791,12 +1579,7 @@
     }
     
     window.closeModal = function() {
-      const modal = document.getElementById('featureModal');
-      if (modal) {
-        modal.classList.remove('active');
-      }
-      // Remove any dynamically created modals
-      document.querySelectorAll('.modal.active').forEach(m => m.remove());
+      document.getElementById('featureModal').classList.remove('active');
     };
 
     // ============================================
