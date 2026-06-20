@@ -656,9 +656,6 @@
           <button class="qbtn" onclick="quickAction('help')">💡 Ayuda con tarea</button>
           <button class="qbtn" onclick="quickAction('explain')">📖 Explicar concepto</button>
           <button class="qbtn" onclick="quickAction('practice')">✍️ Ejercicios prácticos</button>
-          <button class="qbtn" onclick="openLibrary()">📚 Mi biblioteca</button>
-          <button class="qbtn" onclick="openGoals()">🎯 Mis objetivos</button>
-          <button class="qbtn" onclick="openAnalytics()">📊 Mi progreso</button>
         </div>
       </div>
 
@@ -727,19 +724,6 @@
       
     </div>
 
-  </div>
-
-  <!-- MODAL -->
-  <div class="modal" id="featureModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="modal-title" id="modalTitle">Título</div>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
-      <div class="modal-body" id="modalBody">
-        <!-- Content loaded dynamically -->
-      </div>
-    </div>
   </div>
 
   <!-- Firebase SDKs -->
@@ -872,19 +856,12 @@
       const messageDiv = document.createElement('div');
       messageDiv.className = 'msg' + (isUser ? ' user' : '');
       
-      const avatar = isUser ? (currentUser?.name?.charAt(0)?.toUpperCase() || 'U') : 'L';
-      
-      const bubbleContent = !isUser ? `
-        ${content}
-        <button onclick="saveToLibrary(\`${content.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" style="margin-top:0.75rem;padding:0.45rem 0.9rem;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;transition:var(--transition);">
-          💾 Guardar en biblioteca
-        </button>
-      ` : content;
+      const avatar = isUser ? currentUser.name.charAt(0).toUpperCase() : 'L';
       
       messageDiv.innerHTML = `
         <div class="msg-av ${isUser ? 'user' : 'bot'}">${avatar}</div>
         <div>
-          <div class="bubble ${isUser ? 'user' : 'bot'}">${bubbleContent}</div>
+          <div class="bubble ${isUser ? 'user' : 'bot'}">${content}</div>
           <div class="msg-time">${time}</div>
         </div>
       `;
@@ -1308,279 +1285,6 @@
       document.getElementById('voiceBtn').style.background = '';
       document.getElementById('voiceBtn').style.color = '';
     }
-
-    // ============================================
-    // LIBRARY SYSTEM
-    // ============================================
-    window.openLibrary = function() {
-      const stored = localStorage.getItem('luminom_library_' + currentUser.userId);
-      const savedResources = stored ? JSON.parse(stored) : [];
-      
-      const modal = document.getElementById('featureModal');
-      const title = document.getElementById('modalTitle');
-      const body = document.getElementById('modalBody');
-      
-      title.textContent = `📚 Mi Biblioteca (${savedResources.length})`;
-      
-      if (savedResources.length === 0) {
-        body.innerHTML = `
-          <div style="text-align:center;padding:3rem;color:rgba(10,22,40,0.5);">
-            <div style="font-size:4rem;margin-bottom:1rem;">📚</div>
-            <h3 style="margin-bottom:0.5rem;">Tu biblioteca está vacía</h3>
-            <p style="font-size:0.9rem;">Guarda respuestas importantes del tutor para consultarlas después.</p>
-            <p style="font-size:0.85rem;margin-top:1rem;color:rgba(10,22,40,0.4);">Tip: En cada respuesta de la IA, encontrarás un botón "💾 Guardar"</p>
-          </div>
-        `;
-      } else {
-        body.innerHTML = `
-          <div style="max-height:500px;overflow-y:auto;">
-            ${savedResources.map(r => `
-              <div style="background:rgba(201,168,76,0.08);padding:1.25rem;border-radius:12px;margin-bottom:1rem;border-left:4px solid var(--gold);">
-                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:0.75rem;">
-                  <h4 style="color:var(--navy);font-size:1rem;font-weight:600;">${r.title}</h4>
-                  <button onclick="deleteResource('${r.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.2rem;padding:0.25rem;" title="Eliminar">🗑️</button>
-                </div>
-                <p style="font-size:0.88rem;color:rgba(10,22,40,0.75);line-height:1.6;margin-bottom:0.75rem;">${r.content.substring(0, 200)}${r.content.length > 200 ? '...' : ''}</p>
-                <button onclick="viewResource('${r.id}')" style="padding:0.5rem 1rem;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">Ver completo</button>
-              </div>
-            `).join('')}
-          </div>
-        `;
-      }
-      
-      modal.classList.add('active');
-    };
-    
-    window.saveToLibrary = function(content) {
-      const title = prompt('📚 Título para este recurso:', 'Recurso de estudio');
-      if (!title) return;
-      
-      const stored = localStorage.getItem('luminom_library_' + currentUser.userId);
-      const savedResources = stored ? JSON.parse(stored) : [];
-      
-      const resource = {
-        id: Date.now().toString(),
-        title,
-        content,
-        savedAt: new Date().toISOString()
-      };
-      
-      savedResources.push(resource);
-      localStorage.setItem('luminom_library_' + currentUser.userId, JSON.stringify(savedResources));
-      
-      alert('✅ Recurso guardado en tu biblioteca');
-    };
-    
-    window.deleteResource = function(id) {
-      if (!confirm('¿Eliminar este recurso?')) return;
-      
-      const stored = localStorage.getItem('luminom_library_' + currentUser.userId);
-      let savedResources = stored ? JSON.parse(stored) : [];
-      
-      savedResources = savedResources.filter(r => r.id !== id);
-      localStorage.setItem('luminom_library_' + currentUser.userId, JSON.stringify(savedResources));
-      
-      openLibrary();
-    };
-    
-    window.viewResource = function(id) {
-      const stored = localStorage.getItem('luminom_library_' + currentUser.userId);
-      const savedResources = stored ? JSON.parse(stored) : [];
-      const resource = savedResources.find(r => r.id === id);
-      
-      if (!resource) return;
-      
-      const modal = document.createElement('div');
-      modal.className = 'modal active';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <div class="modal-header">
-            <div class="modal-title">${resource.title}</div>
-            <button class="modal-close" onclick="this.closest('.modal').remove()">✕</button>
-          </div>
-          <div class="modal-body">
-            <div style="line-height:1.8;white-space:pre-wrap;padding:1rem;background:rgba(201,168,76,0.05);border-radius:8px;">${resource.content}</div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    };
-
-    // ============================================
-    // GOALS SYSTEM
-    // ============================================
-    window.openGoals = function() {
-      const stored = localStorage.getItem('luminom_goals_' + currentUser.userId);
-      const goals = stored ? JSON.parse(stored) : [];
-      
-      const modal = document.getElementById('featureModal');
-      const title = document.getElementById('modalTitle');
-      const body = document.getElementById('modalBody');
-      
-      const completedCount = goals.filter(g => g.completed).length;
-      title.textContent = `🎯 Mis Objetivos (${completedCount}/${goals.length})`;
-      
-      if (goals.length === 0) {
-        body.innerHTML = `
-          <div style="text-align:center;padding:3rem;color:rgba(10,22,40,0.5);">
-            <div style="font-size:4rem;margin-bottom:1rem;">🎯</div>
-            <h3 style="margin-bottom:0.5rem;">No tienes objetivos definidos</h3>
-            <p style="font-size:0.9rem;">Establece metas académicas y haz seguimiento de tu progreso</p>
-            <button onclick="addGoal()" style="margin-top:2rem;padding:0.75rem 1.5rem;background:var(--gold);color:var(--navy);border:none;border-radius:100px;font-size:0.9rem;font-weight:600;cursor:pointer;">➕ Crear mi primer objetivo</button>
-          </div>
-        `;
-      } else {
-        body.innerHTML = `
-          <div style="max-height:500px;overflow-y:auto;">
-            ${goals.map(g => `
-              <div style="background:${g.completed ? 'rgba(16,185,129,0.08)' : 'rgba(201,168,76,0.08)'};padding:1.25rem;border-radius:12px;margin-bottom:1rem;border-left:4px solid ${g.completed ? '#10b981' : 'var(--gold)'};">
-                <div style="display:flex;justify-content:space-between;align-items:start;">
-                  <div style="flex:1;">
-                    <h4 style="color:var(--navy);font-size:1rem;font-weight:600;margin-bottom:0.5rem;">${g.title}</h4>
-                    <p style="font-size:0.85rem;color:rgba(10,22,40,0.7);margin-bottom:0.75rem;">${g.description || 'Sin descripción'}</p>
-                    <div style="font-size:0.75rem;color:rgba(10,22,40,0.5);">
-                      ${g.completed ? `✅ Completado el ${new Date(g.completedAt).toLocaleDateString('es-CO')}` : '⏳ En progreso'}
-                    </div>
-                  </div>
-                  <button onclick="deleteGoal('${g.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;padding:0.25rem;margin-left:0.5rem;" title="Eliminar">🗑️</button>
-                </div>
-                ${!g.completed ? `
-                  <button onclick="completeGoal('${g.id}')" style="margin-top:0.75rem;padding:0.5rem 1rem;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;">✓ Marcar como completado</button>
-                ` : ''}
-              </div>
-            `).join('')}
-            <button onclick="addGoal()" style="width:100%;padding:0.75rem;background:rgba(201,168,76,0.15);color:var(--navy);border:1px dashed var(--gold);border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;margin-top:1rem;">➕ Agregar nuevo objetivo</button>
-          </div>
-        `;
-      }
-      
-      modal.classList.add('active');
-    };
-    
-    window.addGoal = function() {
-      const title = prompt('🎯 Título del objetivo (ej: "Aprobar Cálculo con 4.5"):');
-      if (!title) return;
-      
-      const description = prompt('📝 Descripción (opcional):') || '';
-      
-      const stored = localStorage.getItem('luminom_goals_' + currentUser.userId);
-      const goals = stored ? JSON.parse(stored) : [];
-      
-      goals.push({
-        id: Date.now().toString(),
-        title,
-        description,
-        completed: false,
-        createdAt: new Date().toISOString()
-      });
-      
-      localStorage.setItem('luminom_goals_' + currentUser.userId, JSON.stringify(goals));
-      openGoals();
-    };
-    
-    window.completeGoal = function(id) {
-      const stored = localStorage.getItem('luminom_goals_' + currentUser.userId);
-      const goals = stored ? JSON.parse(stored) : [];
-      
-      const goal = goals.find(g => g.id === id);
-      if (goal) {
-        goal.completed = true;
-        goal.completedAt = new Date().toISOString();
-        localStorage.setItem('luminom_goals_' + currentUser.userId, JSON.stringify(goals));
-        openGoals();
-        alert('🎉 ¡Felicitaciones! Objetivo completado');
-      }
-    };
-    
-    window.deleteGoal = function(id) {
-      if (!confirm('¿Eliminar este objetivo?')) return;
-      
-      const stored = localStorage.getItem('luminom_goals_' + currentUser.userId);
-      let goals = stored ? JSON.parse(stored) : [];
-      
-      goals = goals.filter(g => g.id !== id);
-      localStorage.setItem('luminom_goals_' + currentUser.userId, JSON.stringify(goals));
-      
-      openGoals();
-    };
-
-    // ============================================
-    // ANALYTICS SYSTEM
-    // ============================================
-    window.openAnalytics = function() {
-      const modal = document.getElementById('featureModal');
-      const title = document.getElementById('modalTitle');
-      const body = document.getElementById('modalBody');
-      
-      title.textContent = '📊 Mi Progreso';
-      
-      const totalQuestions = questionCount;
-      const totalChats = chatHistory.length;
-      
-      const libraryStored = localStorage.getItem('luminom_library_' + currentUser.userId);
-      const librarySize = libraryStored ? JSON.parse(libraryStored).length : 0;
-      
-      const goalsStored = localStorage.getItem('luminom_goals_' + currentUser.userId);
-      const goals = goalsStored ? JSON.parse(goalsStored) : [];
-      const completedGoals = goals.filter(g => g.completed).length;
-      
-      const streak = parseInt(localStorage.getItem('luminom_streak_' + currentUser.userId) || '0');
-      
-      body.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:2rem;">
-          <div style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:2rem;border-radius:16px;text-align:center;">
-            <div style="font-size:3rem;font-weight:700;margin-bottom:0.5rem;">${totalQuestions}</div>
-            <div style="font-size:0.9rem;opacity:0.9;">Preguntas realizadas</div>
-          </div>
-          <div style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:white;padding:2rem;border-radius:16px;text-align:center;">
-            <div style="font-size:3rem;font-weight:700;margin-bottom:0.5rem;">${totalChats}</div>
-            <div style="font-size:0.9rem;opacity:0.9;">Conversaciones</div>
-          </div>
-          <div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:white;padding:2rem;border-radius:16px;text-align:center;">
-            <div style="font-size:3rem;font-weight:700;margin-bottom:0.5rem;">${librarySize}</div>
-            <div style="font-size:0.9rem;opacity:0.9;">Recursos guardados</div>
-          </div>
-          <div style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:2rem;border-radius:16px;text-align:center;">
-            <div style="font-size:3rem;font-weight:700;margin-bottom:0.5rem;">${completedGoals}/${goals.length}</div>
-            <div style="font-size:0.9rem;opacity:0.9;">Objetivos logrados</div>
-          </div>
-        </div>
-        
-        <div style="background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05));padding:2rem;border-radius:16px;text-align:center;border:2px solid var(--gold);">
-          <div style="font-size:3rem;margin-bottom:0.75rem;">🔥</div>
-          <div style="font-size:2.5rem;font-weight:700;color:var(--navy);margin-bottom:0.5rem;">${streak} días</div>
-          <div style="font-size:1rem;color:rgba(10,22,40,0.7);">Racha de estudio consecutiva</div>
-          <p style="font-size:0.85rem;color:rgba(10,22,40,0.5);margin-top:1rem;">¡Sigue así! La consistencia es clave para el aprendizaje</p>
-        </div>
-        
-        <div style="margin-top:2rem;padding:1.5rem;background:rgba(59,130,246,0.08);border-left:4px solid #3b82f6;border-radius:8px;">
-          <strong style="color:var(--navy);font-size:1rem;">💡 Consejo del día:</strong>
-          <p style="font-size:0.9rem;color:rgba(10,22,40,0.75);margin-top:0.75rem;line-height:1.7;">
-            ${getTip()}
-          </p>
-        </div>
-      `;
-      
-      modal.classList.add('active');
-    };
-    
-    function getTip() {
-      const tips = [
-        'Estudia en sesiones de 25 minutos con descansos de 5 minutos (técnica Pomodoro). Tu cerebro retiene mejor la información con descansos regulares.',
-        'Enseñarle a alguien más lo que aprendiste es una de las mejores formas de afianzar tu conocimiento. Explica conceptos en voz alta.',
-        'Toma notas a mano en lugar de digital. Estudios muestran que escribir a mano mejora significativamente la retención de información.',
-        'Establece objetivos específicos y medibles para cada sesión de estudio. Por ejemplo: "Completar 10 ejercicios de álgebra" en lugar de "estudiar matemáticas".',
-        'Estudia en el mismo lugar y hora para crear un hábito. Tu cerebro asociará ese espacio con el enfoque y el aprendizaje.',
-        'Haz ejercicio antes de estudiar. La actividad física aumenta el flujo sanguíneo al cerebro, mejorando la concentración y memoria.',
-        'Duerme bien. El sueño consolida la memoria y el aprendizaje. Un cerebro descansado aprende hasta 40% más eficientemente.',
-        'Usa mapas mentales para conectar conceptos. La visualización de relaciones entre ideas mejora la comprensión y memoria a largo plazo.'
-      ];
-      return tips[Math.floor(Math.random() * tips.length)];
-    }
-    
-    window.closeModal = function() {
-      document.getElementById('featureModal').classList.remove('active');
-    };
 
     // ============================================
     // INITIALIZATION
